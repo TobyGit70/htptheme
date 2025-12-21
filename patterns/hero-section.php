@@ -33,7 +33,6 @@ $video_url = get_template_directory_uri() . '/assets/images/atomgreen.mp4';
                     <video autoplay loop muted playsinline>
                         <source src="<?php echo esc_url($video_url); ?>" type="video/mp4">
                     </video>
-                    <div class="htb-hero-logo-text">HTP</div>
                 </div>
             </div>
 
