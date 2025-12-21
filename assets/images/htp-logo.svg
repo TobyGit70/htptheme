@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <defs>
+    <!-- Gradient for the main sphere -->
+    <radialGradient id="sphereGradient" cx="35%" cy="35%" r="60%">
+      <stop offset="0%" style="stop-color:#74C69D"/>
+      <stop offset="40%" style="stop-color:#52B788"/>
+      <stop offset="70%" style="stop-color:#40916C"/>
+      <stop offset="100%" style="stop-color:#1B4332"/>
+    </radialGradient>
+
+    <!-- Glow effect -->
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <!-- Outer glow -->
+    <filter id="outerGlow" x="-100%" y="-100%" width="300%" height="300%">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+
+  <!-- Background glow -->
+  <circle cx="100" cy="100" r="50" fill="#52B788" opacity="0.2" filter="url(#outerGlow)"/>
+
+  <!-- Main sphere -->
+  <circle cx="100" cy="100" r="45" fill="url(#sphereGradient)"/>
+
+  <!-- Sphere highlight -->
+  <ellipse cx="85" cy="85" rx="15" ry="10" fill="white" opacity="0.3"/>
+
+  <!-- Orbital rings -->
+  <g fill="none" stroke="#8B8B8B" stroke-width="2" opacity="0.7">
+    <!-- Ring 1 - tilted -->
+    <ellipse cx="100" cy="100" rx="70" ry="25" transform="rotate(-30 100 100)"/>
+    <!-- Ring 2 - tilted opposite -->
+    <ellipse cx="100" cy="100" rx="70" ry="25" transform="rotate(30 100 100)"/>
+    <!-- Ring 3 - horizontal -->
+    <ellipse cx="100" cy="100" rx="70" ry="20" transform="rotate(90 100 100)"/>
+  </g>
+
+  <!-- Electron particles with glow -->
+  <g filter="url(#glow)">
+    <!-- Particle 1 -->
+    <circle cx="165" cy="85" r="6" fill="#52B788">
+      <animate attributeName="opacity" values="1;0.5;1" dur="2s" repeatCount="indefinite"/>
+    </circle>
+    <!-- Particle 2 -->
+    <circle cx="35" cy="115" r="6" fill="#52B788">
+      <animate attributeName="opacity" values="0.5;1;0.5" dur="2s" repeatCount="indefinite"/>
+    </circle>
+    <!-- Particle 3 -->
+    <circle cx="100" cy="25" r="5" fill="#74C69D">
+      <animate attributeName="opacity" values="0.7;1;0.7" dur="1.5s" repeatCount="indefinite"/>
+    </circle>
+    <!-- Particle 4 -->
+    <circle cx="100" cy="175" r="5" fill="#74C69D">
+      <animate attributeName="opacity" values="1;0.7;1" dur="1.5s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+</svg>

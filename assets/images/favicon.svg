@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <defs>
+    <radialGradient id="fg" cx="35%" cy="35%" r="60%">
+      <stop offset="0%" style="stop-color:#74C69D"/>
+      <stop offset="50%" style="stop-color:#52B788"/>
+      <stop offset="100%" style="stop-color:#1B4332"/>
+    </radialGradient>
+  </defs>
+  <!-- Main sphere -->
+  <circle cx="16" cy="16" r="12" fill="url(#fg)"/>
+  <!-- Highlight -->
+  <ellipse cx="12" cy="12" rx="4" ry="3" fill="white" opacity="0.3"/>
+  <!-- Simple orbital ring -->
+  <ellipse cx="16" cy="16" rx="15" ry="6" fill="none" stroke="#74C69D" stroke-width="1.5" opacity="0.8"/>
+  <!-- Electron dot -->
+  <circle cx="30" cy="14" r="2" fill="#52B788"/>
+</svg>

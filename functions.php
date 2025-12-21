@@ -375,6 +375,20 @@ function happyturtle_custom_seo_meta() {
 add_action('wp_head', 'happyturtle_custom_seo_meta', 1);
 
 /**
+ * Add favicon to site
+ */
+function happyturtle_favicon() {
+    $favicon_svg = get_template_directory_uri() . '/assets/images/favicon.svg';
+    $logo_svg = get_template_directory_uri() . '/assets/images/htp-logo.svg';
+    ?>
+    <link rel="icon" type="image/svg+xml" href="<?php echo esc_url($favicon_svg); ?>">
+    <link rel="apple-touch-icon" href="<?php echo esc_url($logo_svg); ?>">
+    <meta name="theme-color" content="#1B4332">
+    <?php
+}
+add_action('wp_head', 'happyturtle_favicon', 2);
+
+/**
  * Filter document title for SEO
  */
 function happyturtle_custom_document_title($title) {
