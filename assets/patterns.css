@@ -24,14 +24,19 @@
    HERO SECTION - Clean, Modern Design
    ============================================ */
 
-.htb-hero-section {
+.htb-hero-section,
+.wp-block-group.htb-hero-section {
     position: relative;
     overflow: hidden;
-    background: linear-gradient(135deg, #0F2419 0%, #1B4332 50%, #2D6A4F 100%);
+    background: linear-gradient(135deg, #0F2419 0%, #1B4332 50%, #2D6A4F 100%) !important;
     min-height: 90vh;
-    display: flex;
+    display: flex !important;
     align-items: center;
     justify-content: center;
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
 }
 
 /* Subtle animated background orbs */

@@ -7,6 +7,8 @@
  * Block Types: core/group
  * Description: Clean, modern hero section for Happy Turtle Processing
  */
+
+$video_url = get_template_directory_uri() . '/assets/images/atomgreen.mp4';
 ?>
 <!-- wp:group {"align":"full","className":"htb-hero-section","layout":{"type":"constrained"}} -->
 <div class="wp-block-group alignfull htb-hero-section">
@@ -18,7 +20,7 @@
             <div class="htb-hero-badge">
                 <div class="htb-hero-video-container">
                     <video autoplay loop muted playsinline>
-                        <source src="<?php echo get_template_directory_uri(); ?>/assets/images/atomgreen.mp4" type="video/mp4">
+                        <source src="<?php echo esc_url($video_url); ?>" type="video/mp4">
                     </video>
                     <div class="htb-hero-logo-text">HTP</div>
                 </div>

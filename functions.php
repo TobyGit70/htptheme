@@ -54,6 +54,14 @@ function happyturtle_fse_styles() {
         '1.0.0'
     );
 
+    // Pattern styles (hero, cards, etc.)
+    wp_enqueue_style(
+        'htp-patterns',
+        get_template_directory_uri() . '/assets/patterns.css',
+        array('happyturtle-fse-style'),
+        '1.1.0'
+    );
+
     // Splash screen script
     wp_enqueue_script(
         'happyturtle-splash',
