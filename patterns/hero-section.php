@@ -14,30 +14,28 @@ $video_url = get_template_directory_uri() . '/assets/images/atomgreen.mp4';
 <div class="wp-block-group alignfull htb-hero-section">
     <!-- wp:html -->
     <div class="htb-hero-modern">
-        <!-- Top Centered Header -->
-        <div class="htb-hero-header">
-            <h1 class="htb-hero-title">
-                <span class="htb-hero-title-main">Happy Turtle</span>
-                <span class="htb-hero-title-accent">Processing</span>
-            </h1>
-            <p class="htb-hero-tagline">
-                Where Chill Meets Craft <span class="htb-hero-divider">|</span> Turning Bud Into Better
-            </p>
+        <!-- Background Video Layer -->
+        <div class="htb-hero-video-bg">
+            <video autoplay loop muted playsinline>
+                <source src="<?php echo esc_url($video_url); ?>" type="video/mp4">
+            </video>
         </div>
 
-        <!-- Two Column Layout -->
-        <div class="htb-hero-columns">
-            <!-- Left Column - Video -->
-            <div class="htb-hero-col htb-hero-col-left">
-                <div class="htb-hero-video-container">
-                    <video autoplay loop muted playsinline>
-                        <source src="<?php echo esc_url($video_url); ?>" type="video/mp4">
-                    </video>
-                </div>
+        <!-- Content Layer -->
+        <div class="htb-hero-content-layer">
+            <!-- Top Centered Header -->
+            <div class="htb-hero-header">
+                <h1 class="htb-hero-title">
+                    <span class="htb-hero-title-main">Happy Turtle</span>
+                    <span class="htb-hero-title-accent">Processing</span>
+                </h1>
+                <p class="htb-hero-tagline">
+                    Where Chill Meets Craft <span class="htb-hero-divider">|</span> Turning Bud Into Better
+                </p>
             </div>
 
-            <!-- Right Column - Content -->
-            <div class="htb-hero-col htb-hero-col-right">
+            <!-- Content Below -->
+            <div class="htb-hero-info">
                 <p class="htb-hero-description">
                     Arkansas's premier licensed cannabis processor — crafting premium concentrates
                     for dispensaries statewide, in full compliance with state regulations.
