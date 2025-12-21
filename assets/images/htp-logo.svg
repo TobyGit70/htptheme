@@ -1,65 +1,106 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
   <defs>
-    <!-- Gradient for the main sphere -->
-    <radialGradient id="sphereGradient" cx="35%" cy="35%" r="60%">
-      <stop offset="0%" style="stop-color:#74C69D"/>
-      <stop offset="40%" style="stop-color:#52B788"/>
-      <stop offset="70%" style="stop-color:#40916C"/>
-      <stop offset="100%" style="stop-color:#1B4332"/>
+    <!-- Nucleus glow gradient -->
+    <radialGradient id="nucleusGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:#FFFFFF"/>
+      <stop offset="30%" style="stop-color:#FFE4B5"/>
+      <stop offset="60%" style="stop-color:#F4A460"/>
+      <stop offset="100%" style="stop-color:#CD853F"/>
     </radialGradient>
 
-    <!-- Glow effect -->
-    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
-      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+    <!-- Orbital gradient -->
+    <linearGradient id="orbitalGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFD700"/>
+      <stop offset="50%" style="stop-color:#FFA500"/>
+      <stop offset="100%" style="stop-color:#FF8C00"/>
+    </linearGradient>
+
+    <!-- Glow filter -->
+    <filter id="glow" x="-100%" y="-100%" width="300%" height="300%">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
       <feMerge>
-        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="blur"/>
         <feMergeNode in="SourceGraphic"/>
       </feMerge>
     </filter>
 
-    <!-- Outer glow -->
-    <filter id="outerGlow" x="-100%" y="-100%" width="300%" height="300%">
+    <!-- Strong glow for nucleus -->
+    <filter id="nucleusGlowFilter" x="-200%" y="-200%" width="500%" height="500%">
       <feGaussianBlur stdDeviation="8" result="blur"/>
-      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
     </filter>
   </defs>
 
-  <!-- Background glow -->
-  <circle cx="100" cy="100" r="50" fill="#52B788" opacity="0.2" filter="url(#outerGlow)"/>
+  <!-- Background circle (optional dark backing) -->
+  <circle cx="100" cy="100" r="95" fill="#1a1a1a" opacity="0"/>
 
-  <!-- Main sphere -->
-  <circle cx="100" cy="100" r="45" fill="url(#sphereGradient)"/>
+  <!-- Outer ambient glow -->
+  <circle cx="100" cy="100" r="40" fill="#FFA500" opacity="0.15" filter="url(#nucleusGlowFilter)"/>
 
-  <!-- Sphere highlight -->
-  <ellipse cx="85" cy="85" rx="15" ry="10" fill="white" opacity="0.3"/>
+  <!-- Orbital rings with glow -->
+  <g fill="none" stroke-width="2.5" filter="url(#glow)">
+    <!-- Ring 1 - tilted left -->
+    <ellipse cx="100" cy="100" rx="75" ry="30" stroke="#FF8C00" opacity="0.9" transform="rotate(-35 100 100)">
+      <animate attributeName="opacity" values="0.9;0.6;0.9" dur="3s" repeatCount="indefinite"/>
+    </ellipse>
 
-  <!-- Orbital rings -->
-  <g fill="none" stroke="#8B8B8B" stroke-width="2" opacity="0.7">
-    <!-- Ring 1 - tilted -->
-    <ellipse cx="100" cy="100" rx="70" ry="25" transform="rotate(-30 100 100)"/>
-    <!-- Ring 2 - tilted opposite -->
-    <ellipse cx="100" cy="100" rx="70" ry="25" transform="rotate(30 100 100)"/>
-    <!-- Ring 3 - horizontal -->
-    <ellipse cx="100" cy="100" rx="70" ry="20" transform="rotate(90 100 100)"/>
+    <!-- Ring 2 - tilted right -->
+    <ellipse cx="100" cy="100" rx="75" ry="30" stroke="#FFA500" opacity="0.85" transform="rotate(35 100 100)">
+      <animate attributeName="opacity" values="0.6;0.9;0.6" dur="3s" repeatCount="indefinite"/>
+    </ellipse>
+
+    <!-- Ring 3 - vertical -->
+    <ellipse cx="100" cy="100" rx="30" ry="75" stroke="#FFD700" opacity="0.8">
+      <animate attributeName="opacity" values="0.8;0.5;0.8" dur="2.5s" repeatCount="indefinite"/>
+    </ellipse>
   </g>
 
-  <!-- Electron particles with glow -->
+  <!-- Glowing nucleus -->
+  <circle cx="100" cy="100" r="22" fill="url(#nucleusGlow)" filter="url(#nucleusGlowFilter)"/>
+
+  <!-- Nucleus bright center -->
+  <circle cx="100" cy="100" r="12" fill="#FFFFFF" opacity="0.9">
+    <animate attributeName="opacity" values="0.9;0.7;0.9" dur="2s" repeatCount="indefinite"/>
+  </circle>
+
+  <!-- Highlight on nucleus -->
+  <ellipse cx="93" cy="93" rx="6" ry="4" fill="white" opacity="0.6"/>
+
+  <!-- Electron particles on orbital paths -->
   <g filter="url(#glow)">
-    <!-- Particle 1 -->
-    <circle cx="165" cy="85" r="6" fill="#52B788">
-      <animate attributeName="opacity" values="1;0.5;1" dur="2s" repeatCount="indefinite"/>
+    <!-- Electron 1 -->
+    <circle r="5" fill="#FFD700">
+      <animateMotion dur="4s" repeatCount="indefinite">
+        <mpath href="#orbit1"/>
+      </animateMotion>
+      <animate attributeName="opacity" values="1;0.6;1" dur="2s" repeatCount="indefinite"/>
     </circle>
-    <!-- Particle 2 -->
-    <circle cx="35" cy="115" r="6" fill="#52B788">
-      <animate attributeName="opacity" values="0.5;1;0.5" dur="2s" repeatCount="indefinite"/>
+
+    <!-- Electron 2 -->
+    <circle r="5" fill="#FFA500">
+      <animateMotion dur="3.5s" repeatCount="indefinite">
+        <mpath href="#orbit2"/>
+      </animateMotion>
+      <animate attributeName="opacity" values="0.6;1;0.6" dur="2s" repeatCount="indefinite"/>
     </circle>
-    <!-- Particle 3 -->
-    <circle cx="100" cy="25" r="5" fill="#74C69D">
-      <animate attributeName="opacity" values="0.7;1;0.7" dur="1.5s" repeatCount="indefinite"/>
-    </circle>
-    <!-- Particle 4 -->
-    <circle cx="100" cy="175" r="5" fill="#74C69D">
-      <animate attributeName="opacity" values="1;0.7;1" dur="1.5s" repeatCount="indefinite"/>
+
+    <!-- Electron 3 -->
+    <circle r="4" fill="#FFE4B5">
+      <animateMotion dur="3s" repeatCount="indefinite">
+        <mpath href="#orbit3"/>
+      </animateMotion>
+      <animate attributeName="opacity" values="0.8;1;0.8" dur="1.5s" repeatCount="indefinite"/>
     </circle>
   </g>
+
+  <!-- Hidden paths for animation -->
+  <defs>
+    <path id="orbit1" d="M 100,70 A 75,30 -35 1,1 100,130 A 75,30 -35 1,1 100,70" fill="none"/>
+    <path id="orbit2" d="M 100,70 A 75,30 35 1,1 100,130 A 75,30 35 1,1 100,70" fill="none"/>
+    <path id="orbit3" d="M 70,100 A 30,75 0 1,1 130,100 A 30,75 0 1,1 70,100" fill="none"/>
+  </defs>
 </svg>

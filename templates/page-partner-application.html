@@ -1,0 +1,313 @@
+<!-- wp:template-part {"slug":"header","tagName":"header"} /-->
+
+<!-- wp:group {"tagName":"main","style":{"spacing":{"padding":{"top":"2rem","bottom":"4rem"}}},"backgroundColor":"light","layout":{"type":"constrained"}} -->
+<main class="wp-block-group has-light-background-color has-background" style="padding-top:2rem;padding-bottom:4rem">
+
+    <!-- wp:heading {"textAlign":"center","style":{"spacing":{"margin":{"bottom":"1rem"}}},"fontSize":"xx-large"} -->
+    <h1 class="wp-block-heading has-text-align-center has-xx-large-font-size htb-gradient-text" style="margin-bottom:1rem;font-size:2.5rem;font-weight:700">Partner Application</h1>
+    <!-- /wp:heading -->
+
+    <!-- wp:paragraph {"align":"center","style":{"color":{"text":"#2D6A4F"},"spacing":{"margin":{"bottom":"2rem"}}}} -->
+    <p class="has-text-align-center has-text-color" style="color:#2D6A4F;margin-bottom:2rem">Apply to become a wholesale partner with Happy Turtle Processing</p>
+    <!-- /wp:paragraph -->
+
+    <!-- wp:html -->
+    <div style="max-width:800px;margin:0 auto;padding:0 1rem;">
+
+        <!-- Requirements Box -->
+        <div style="background:#fff3cd;border-radius:12px;padding:1.5rem;margin-bottom:2rem;border-left:4px solid #D4A574;">
+            <h3 style="color:#1B4332;margin:0 0 1rem;font-size:1.25rem;">Requirements</h3>
+            <ul style="margin:0;padding-left:1.5rem;color:#1B4332;">
+                <li>Must hold a valid Arkansas cannabis license (Dispensary, Cultivator, or Processor)</li>
+                <li>Must be 21 years of age or older</li>
+                <li>Must have active BioTrack THC account for seed-to-sale tracking</li>
+            </ul>
+        </div>
+
+        <!-- Application Form -->
+        <div style="background:#fff;border-radius:16px;padding:2rem;box-shadow:0 4px 20px rgba(0,0,0,0.08);">
+            <form id="partner-application-form" style="display:grid;gap:1.5rem;">
+
+                <!-- License Number - First for auto-lookup -->
+                <div>
+                    <label style="display:block;font-weight:600;margin-bottom:0.5rem;color:#1B4332;">Arkansas License Number *</label>
+                    <div style="display:flex;gap:10px;">
+                        <input type="text" name="license_number" id="license_number" required
+                            style="flex:1;padding:0.75rem;border:1px solid #2D6A4F;border-radius:8px;font-size:1rem;"
+                            placeholder="e.g., D-0001, C-0001, P-0001">
+                        <button type="button" id="lookup-btn" style="background:linear-gradient(135deg,#1B4332,#2D6A4F);color:#fff;border:none;padding:0.75rem 1.5rem;border-radius:8px;font-weight:600;cursor:pointer;white-space:nowrap;">Lookup</button>
+                    </div>
+                    <p style="font-size:0.875rem;color:#6c757d;margin:0.5rem 0 0;">Enter your license to auto-fill your information</p>
+                </div>
+
+                <!-- Two Column Row -->
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
+                    <div>
+                        <label style="display:block;font-weight:600;margin-bottom:0.5rem;color:#1B4332;">First Name *</label>
+                        <input type="text" name="first_name" id="first_name" required style="width:100%;padding:0.75rem;border:1px solid #2D6A4F;border-radius:8px;font-size:1rem;">
+                    </div>
+                    <div>
+                        <label style="display:block;font-weight:600;margin-bottom:0.5rem;color:#1B4332;">Last Name *</label>
+                        <input type="text" name="last_name" id="last_name" required style="width:100%;padding:0.75rem;border:1px solid #2D6A4F;border-radius:8px;font-size:1rem;">
+                    </div>
+                </div>
+
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
+                    <div>
+                        <label style="display:block;font-weight:600;margin-bottom:0.5rem;color:#1B4332;">Business Email *</label>
+                        <input type="email" name="email" id="email" required style="width:100%;padding:0.75rem;border:1px solid #2D6A4F;border-radius:8px;font-size:1rem;">
+                    </div>
+                    <div>
+                        <label style="display:block;font-weight:600;margin-bottom:0.5rem;color:#1B4332;">Business Phone *</label>
+                        <input type="tel" name="phone" id="phone" required style="width:100%;padding:0.75rem;border:1px solid #2D6A4F;border-radius:8px;font-size:1rem;">
+                    </div>
+                </div>
+
+                <div>
+                    <label style="display:block;font-weight:600;margin-bottom:0.5rem;color:#1B4332;">Business/DBA Name *</label>
+                    <input type="text" name="business_name" id="business_name" required style="width:100%;padding:0.75rem;border:1px solid #2D6A4F;border-radius:8px;font-size:1rem;">
+                </div>
+
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
+                    <div>
+                        <label style="display:block;font-weight:600;margin-bottom:0.5rem;color:#1B4332;">License Type *</label>
+                        <select name="license_type" id="license_type" required style="width:100%;padding:0.75rem;border:1px solid #2D6A4F;border-radius:8px;font-size:1rem;background:#fff;">
+                            <option value="">Select License Type...</option>
+                            <option value="dispensary">Dispensary</option>
+                            <option value="cultivator">Cultivator</option>
+                            <option value="processor">Processor</option>
+                            <option value="transporter">Transporter</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="display:block;font-weight:600;margin-bottom:0.5rem;color:#1B4332;">License Expiration Date *</label>
+                        <input type="date" name="license_expiration" id="license_expiration" required style="width:100%;padding:0.75rem;border:1px solid #2D6A4F;border-radius:8px;font-size:1rem;">
+                    </div>
+                </div>
+
+                <div>
+                    <label style="display:block;font-weight:600;margin-bottom:0.5rem;color:#1B4332;">Business Address *</label>
+                    <input type="text" name="address" id="address" required style="width:100%;padding:0.75rem;border:1px solid #2D6A4F;border-radius:8px;font-size:1rem;margin-bottom:0.75rem;" placeholder="Street Address">
+                    <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:0.75rem;">
+                        <input type="text" name="city" id="city" required style="width:100%;padding:0.75rem;border:1px solid #2D6A4F;border-radius:8px;font-size:1rem;" placeholder="City">
+                        <input type="text" name="state" id="state" value="AR" required style="width:100%;padding:0.75rem;border:1px solid #2D6A4F;border-radius:8px;font-size:1rem;" placeholder="State">
+                        <input type="text" name="zip" id="zip" required style="width:100%;padding:0.75rem;border:1px solid #2D6A4F;border-radius:8px;font-size:1rem;" placeholder="ZIP">
+                    </div>
+                </div>
+
+                <div>
+                    <label style="display:block;font-weight:600;margin-bottom:0.5rem;color:#1B4332;">BioTrack Account ID (if applicable)</label>
+                    <input type="text" name="biotrack_id" id="biotrack_id" style="width:100%;padding:0.75rem;border:1px solid #2D6A4F;border-radius:8px;font-size:1rem;">
+                </div>
+
+                <div>
+                    <label style="display:block;font-weight:600;margin-bottom:0.75rem;color:#1B4332;">Products of Interest *</label>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;">
+                        <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;"><input type="checkbox" name="products[]" value="concentrates"> Concentrates (Shatter, Wax, Budder)</label>
+                        <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;"><input type="checkbox" name="products[]" value="distillate"> Distillate</label>
+                        <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;"><input type="checkbox" name="products[]" value="rso"> RSO (Rick Simpson Oil)</label>
+                        <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;"><input type="checkbox" name="products[]" value="vape"> Vape Cartridges</label>
+                        <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;"><input type="checkbox" name="products[]" value="tinctures"> Tinctures</label>
+                        <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;"><input type="checkbox" name="products[]" value="topicals"> Topicals</label>
+                        <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;"><input type="checkbox" name="products[]" value="edibles"> Edible Ingredients</label>
+                        <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;"><input type="checkbox" name="products[]" value="custom"> Custom Processing Services</label>
+                    </div>
+                </div>
+
+                <div>
+                    <label style="display:block;font-weight:600;margin-bottom:0.5rem;color:#1B4332;">Estimated Monthly Volume *</label>
+                    <select name="monthly_volume" id="monthly_volume" required style="width:100%;padding:0.75rem;border:1px solid #2D6A4F;border-radius:8px;font-size:1rem;background:#fff;">
+                        <option value="">Select Volume...</option>
+                        <option value="under5">Under 5 lbs/month</option>
+                        <option value="5-20">5-20 lbs/month</option>
+                        <option value="20-50">20-50 lbs/month</option>
+                        <option value="50-100">50-100 lbs/month</option>
+                        <option value="100+">100+ lbs/month</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label style="display:block;font-weight:600;margin-bottom:0.5rem;color:#1B4332;">Additional Information</label>
+                    <textarea name="additional_info" id="additional_info" rows="4" style="width:100%;padding:0.75rem;border:1px solid #2D6A4F;border-radius:8px;font-size:1rem;resize:vertical;" placeholder="Tell us about your business and how we can help..."></textarea>
+                </div>
+
+                <div style="background:#f8f9fa;padding:1rem;border-radius:8px;">
+                    <label style="display:block;font-weight:600;margin-bottom:0.75rem;color:#1B4332;">Certifications *</label>
+                    <label style="display:flex;align-items:flex-start;gap:0.5rem;cursor:pointer;margin-bottom:0.5rem;">
+                        <input type="checkbox" name="cert_license" required style="margin-top:4px;">
+                        <span>I certify that I hold a valid Arkansas cannabis license</span>
+                    </label>
+                    <label style="display:flex;align-items:flex-start;gap:0.5rem;cursor:pointer;margin-bottom:0.5rem;">
+                        <input type="checkbox" name="cert_terms" required style="margin-top:4px;">
+                        <span>I agree to the <a href="/wp-content/legal/terms-of-service.html" target="_blank" style="color:#2D6A4F;">Terms of Service</a> and <a href="/wp-content/legal/privacy-policy.html" target="_blank" style="color:#2D6A4F;">Privacy Policy</a></span>
+                    </label>
+                    <label style="display:flex;align-items:flex-start;gap:0.5rem;cursor:pointer;">
+                        <input type="checkbox" name="cert_b2b" required style="margin-top:4px;">
+                        <span>I understand this is a B2B application only</span>
+                    </label>
+                </div>
+
+                <div id="form-message" style="display:none;padding:1rem;border-radius:8px;"></div>
+
+                <button type="submit" id="submit-btn" class="htb-btn htb-btn-primary" style="width:100%;padding:1rem;font-size:1.125rem;justify-content:center;">
+                    Submit Application
+                </button>
+            </form>
+        </div>
+
+        <!-- Compliance Notice -->
+        <div style="background:#d4edda;border-radius:12px;padding:1.5rem;margin-top:2rem;border-left:4px solid #2D6A4F;">
+            <p style="margin:0 0 0.75rem;"><strong>Regulatory Compliance:</strong> Happy Turtle Processing, Inc. (License #ARP-00340) operates in full compliance with Arkansas Code Annotated § 4-86-101 et seq. and all regulations promulgated by the Alcoholic Beverage Control Division – Cannabis Section.</p>
+            <p style="margin:0;"><strong>Privacy:</strong> Information submitted through this form is used solely for partner verification and will be handled in accordance with our <a href="/wp-content/legal/privacy-policy.html" style="color:#1B4332;">Privacy Policy</a>.</p>
+        </div>
+    </div>
+
+    <script>
+    (function() {
+        // Auto-fill from URL hash parameters
+        function prefillFromUrl() {
+            const hash = window.location.hash.substring(1);
+            if (!hash) return;
+
+            const params = new URLSearchParams(hash);
+
+            // Map URL params to form fields
+            const mappings = {
+                'license': 'license_number',
+                'name': null, // Special handling for name
+                'company': 'business_name',
+                'email': 'email',
+                'phone': 'phone'
+            };
+
+            params.forEach((value, key) => {
+                if (key === 'name' && value) {
+                    const parts = value.split(' ');
+                    const firstName = parts[0] || '';
+                    const lastName = parts.slice(1).join(' ') || '';
+                    document.getElementById('first_name').value = firstName;
+                    document.getElementById('last_name').value = lastName;
+                    highlightField('first_name');
+                    highlightField('last_name');
+                } else if (mappings[key]) {
+                    const field = document.getElementById(mappings[key]);
+                    if (field) {
+                        field.value = decodeURIComponent(value);
+                        highlightField(mappings[key]);
+                    }
+                }
+            });
+
+            // Show success message if fields were populated
+            if (params.has('license')) {
+                showMessage('Your information has been pre-filled. Please review and complete the remaining fields.', 'success');
+            }
+        }
+
+        function highlightField(id) {
+            const field = document.getElementById(id);
+            if (field) {
+                field.style.backgroundColor = '#f0f9f4';
+                field.style.borderColor = '#2D6A4F';
+            }
+        }
+
+        function showMessage(text, type) {
+            const msg = document.getElementById('form-message');
+            msg.style.display = 'block';
+            msg.style.backgroundColor = type === 'success' ? '#d4edda' : '#f8d7da';
+            msg.style.color = type === 'success' ? '#155724' : '#721c24';
+            msg.style.border = '1px solid ' + (type === 'success' ? '#c3e6cb' : '#f5c6cb');
+            msg.innerHTML = text;
+        }
+
+        // Lookup button handler
+        document.getElementById('lookup-btn').addEventListener('click', function() {
+            const license = document.getElementById('license_number').value;
+            if (!license || license.length < 3) {
+                showMessage('Please enter a valid license number', 'error');
+                return;
+            }
+
+            this.textContent = 'Looking up...';
+            this.disabled = true;
+
+            fetch('/wp-admin/admin-ajax.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: 'action=htb_lookup_partner_by_license&license_number=' + encodeURIComponent(license) + '&nonce=' + (window.htbLicenseLookup?.nonce || '')
+            })
+            .then(r => r.json())
+            .then(data => {
+                this.textContent = 'Lookup';
+                this.disabled = false;
+
+                if (data.success && data.data.partner) {
+                    const p = data.data.partner;
+                    if (p.contact_name) {
+                        const parts = p.contact_name.split(' ');
+                        document.getElementById('first_name').value = parts[0] || '';
+                        document.getElementById('last_name').value = parts.slice(1).join(' ') || '';
+                        highlightField('first_name');
+                        highlightField('last_name');
+                    }
+                    if (p.email) { document.getElementById('email').value = p.email; highlightField('email'); }
+                    if (p.phone) { document.getElementById('phone').value = p.phone; highlightField('phone'); }
+                    if (p.business_name) { document.getElementById('business_name').value = p.business_name; highlightField('business_name'); }
+                    if (p.license_type) { document.getElementById('license_type').value = p.license_type; highlightField('license_type'); }
+                    showMessage('Partner found! Information auto-filled.', 'success');
+                } else {
+                    showMessage(data.data?.message || 'Partner not found. Please fill in your information manually.', 'error');
+                }
+            })
+            .catch(() => {
+                this.textContent = 'Lookup';
+                this.disabled = false;
+                showMessage('Lookup failed. Please fill in your information manually.', 'error');
+            });
+        });
+
+        // Form submission
+        document.getElementById('partner-application-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const btn = document.getElementById('submit-btn');
+            btn.textContent = 'Submitting...';
+            btn.disabled = true;
+
+            const formData = new FormData(this);
+            formData.append('action', 'htb_submit_partner_application');
+
+            fetch('/wp-admin/admin-ajax.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(r => r.json())
+            .then(data => {
+                btn.textContent = 'Submit Application';
+                btn.disabled = false;
+
+                if (data.success) {
+                    showMessage('<strong>Application Received!</strong><br>Thank you for your interest in partnering with Happy Turtle Processing. Our team will review your application and verify your license information within 3-5 business days.<br><br>You will receive an email with next steps once approved.', 'success');
+                    this.reset();
+                } else {
+                    showMessage(data.data?.message || 'Submission failed. Please try again.', 'error');
+                }
+            })
+            .catch(() => {
+                btn.textContent = 'Submit Application';
+                btn.disabled = false;
+                showMessage('Submission failed. Please try again.', 'error');
+            });
+        });
+
+        // Run prefill on page load
+        prefillFromUrl();
+    })();
+    </script>
+    <!-- /wp:html -->
+
+</main>
+<!-- /wp:group -->
+
+<!-- wp:template-part {"slug":"footer","tagName":"footer"} /-->

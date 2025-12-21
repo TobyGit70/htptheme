@@ -43,7 +43,7 @@ function happyturtle_fse_styles() {
         'happyturtle-fse-style',
         get_template_directory_uri() . '/assets/style.css',
         array(),
-        '3.0.0'
+        '3.2.0'
     );
 
     // Enhanced design system (Three Principles)
@@ -67,7 +67,7 @@ function happyturtle_fse_styles() {
         'happyturtle-splash',
         get_template_directory_uri() . '/assets/splash.js',
         array(),
-        '2.2.0',
+        '4.1.0',
         true
     );
 
@@ -158,8 +158,8 @@ add_filter('upload_mimes', 'happyturtle_allow_3d_uploads');
 
 // Enqueue splash screen on login page
 function happyturtle_login_scripts() {
-    wp_enqueue_style('happyturtle-splash-style', get_template_directory_uri() . '/assets/style.css', array(), '3.0.0');
-    wp_enqueue_script('happyturtle-splash', get_template_directory_uri() . '/assets/splash.js', array(), '2.2.0', true);
+    wp_enqueue_style('happyturtle-splash-style', get_template_directory_uri() . '/assets/style.css', array(), '3.2.0');
+    wp_enqueue_script('happyturtle-splash', get_template_directory_uri() . '/assets/splash.js', array(), '4.1.0', true);
     wp_localize_script('happyturtle-splash', 'htbData', array('themeUrl' => get_template_directory_uri()));
 }
 add_action('login_enqueue_scripts', 'happyturtle_login_scripts');

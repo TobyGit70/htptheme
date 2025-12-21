@@ -8,7 +8,7 @@
  */
 ?>
 <!-- wp:group {"align":"full","style":{"spacing":{"padding":{"top":"5rem","bottom":"5rem","left":"2rem","right":"2rem"}}},"gradient":"hero-background","className":"htb-services-section","layout":{"type":"constrained"}} -->
-<div class="wp-block-group alignfull htb-services-section has-hero-background-gradient-background has-background" id="products" style="text-align:center;padding-top:5rem;padding-right:2rem;padding-bottom:5rem;padding-left:2rem">
+<div class="wp-block-group alignfull htb-services-section has-hero-background-gradient-background has-background" id="what-we-do" style="text-align:center;padding-top:5rem;padding-right:2rem;padding-bottom:5rem;padding-left:2rem">
     <!-- wp:heading {"textAlign":"center","style":{"spacing":{"margin":{"bottom":"3rem"}}},"fontSize":"xx-large"} -->
     <h2 class="wp-block-heading has-text-align-center has-xx-large-font-size htb-gradient-text htb-scroll-zoom" style="margin-bottom:1rem;font-size:3rem;font-weight:700">What We Do</h2>
     <!-- /wp:heading -->

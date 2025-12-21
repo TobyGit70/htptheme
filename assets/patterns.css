@@ -3,21 +3,33 @@
 /* Feature Cards */
 .feature-card {
     transition: transform 0.3s ease, box-shadow 0.3s ease;
+    box-shadow:
+        0 10px 40px rgba(0, 0, 0, 0.12),
+        0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .feature-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1) !important;
+    transform: translateY(-8px);
+    box-shadow:
+        0 20px 60px rgba(0, 0, 0, 0.18),
+        0 8px 24px rgba(0, 0, 0, 0.12) !important;
 }
 
 /* Service Cards */
-.service-card {
+.service-card,
+.htb-service-card {
     transition: transform 0.3s ease, box-shadow 0.3s ease;
+    box-shadow:
+        0 10px 40px rgba(0, 0, 0, 0.12),
+        0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
-.service-card:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15) !important;
+.service-card:hover,
+.htb-service-card:hover {
+    transform: translateY(-10px);
+    box-shadow:
+        0 24px 70px rgba(0, 0, 0, 0.2),
+        0 10px 30px rgba(0, 0, 0, 0.15) !important;
 }
 
 /* ============================================
@@ -28,11 +40,9 @@
 .wp-block-group.htb-hero-section {
     position: relative;
     overflow: hidden;
-    background: linear-gradient(135deg, #0F2419 0%, #1B4332 50%, #2D6A4F 100%) !important;
-    min-height: 90vh;
-    display: flex !important;
-    align-items: center;
-    justify-content: center;
+    background: linear-gradient(135deg, #F0F4F2 0%, #E8F0EE 50%, #FFF8ED 100%) !important;
+    min-height: auto;
+    display: block !important;
     padding: 0 !important;
     margin: 0 !important;
     max-width: 100% !important;
@@ -46,14 +56,14 @@
     position: absolute;
     border-radius: 50%;
     filter: blur(100px);
-    opacity: 0.15;
+    opacity: 0.08;
     animation: float 20s ease-in-out infinite;
 }
 
 .htb-hero-section::before {
     width: 500px;
     height: 500px;
-    background: #52B788;
+    background: #2D6A4F;
     top: -150px;
     left: -100px;
 }
@@ -81,19 +91,19 @@
     width: 100%;
     max-width: 1400px;
     margin: 0 auto;
-    padding: 4rem 2rem;
+    padding: 2rem 2rem 4rem;
 }
 
 /* Top Centered Header */
 .htb-hero-header {
     text-align: center;
-    margin-bottom: 3rem;
+    margin-bottom: 2rem;
 }
 
 /* Two Column Layout */
 .htb-hero-columns {
     display: flex;
-    align-items: center;
+    align-items: stretch;
     justify-content: center;
     gap: 4rem;
 }
@@ -105,13 +115,17 @@
 
 .htb-hero-col-left {
     display: flex;
-    justify-content: center;
+    flex-direction: column;
+    justify-content: space-between;
     align-items: center;
+    gap: 1.5rem;
 }
 
 .htb-hero-col-right {
     display: flex;
     flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
     gap: 1.5rem;
 }
 
@@ -139,12 +153,23 @@
     border-radius: 16px;
     overflow: hidden;
     box-shadow:
-        0 8px 32px rgba(0, 0, 0, 0.3),
-        0 0 60px rgba(82, 183, 136, 0.2),
+        0 20px 60px rgba(0, 0, 0, 0.35),
+        0 8px 25px rgba(0, 0, 0, 0.2),
+        0 0 80px rgba(82, 183, 136, 0.25),
         inset 0 0 0 1px rgba(255, 255, 255, 0.1);
-    border: 2px solid rgba(212, 165, 116, 0.3);
+    border: 2px solid rgba(212, 165, 116, 0.4);
     background: rgba(0, 0, 0, 0.2);
     margin: 0 auto;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.htb-hero-video-container:hover {
+    transform: translateY(-6px);
+    box-shadow:
+        0 30px 80px rgba(0, 0, 0, 0.4),
+        0 12px 35px rgba(0, 0, 0, 0.25),
+        0 0 100px rgba(82, 183, 136, 0.3),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.15);
 }
 
 .htb-hero-video-container video {
@@ -159,27 +184,22 @@
     font-weight: 800;
     line-height: 1.1;
     margin: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
 }
 
 .htb-hero-title-main {
-    color: #FFFFFF;
-    text-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
+    color: #1B4332;
 }
 
 .htb-hero-title-accent {
-    color: #D4A574;
+    color: #2D6A4F;
     font-weight: 700;
     font-size: 0.85em;
-    text-shadow: 0 0 30px rgba(212, 165, 116, 0.4);
 }
 
 /* Tagline */
 .htb-hero-tagline {
     font-size: 1.25rem;
-    color: rgba(255, 255, 255, 0.8);
+    color: #6C757D;
     font-weight: 500;
     letter-spacing: 0.05em;
     margin: 0;
@@ -188,24 +208,25 @@
 .htb-hero-divider {
     display: inline-block;
     margin: 0 0.75rem;
-    color: #52B788;
+    color: #D4A574;
     font-weight: 300;
 }
 
 /* Description */
 .htb-hero-description {
     font-size: 1.125rem;
-    color: rgba(255, 255, 255, 0.7);
+    color: #6C757D;
     line-height: 1.7;
     max-width: 600px;
     margin: 0;
+    text-align: center;
 }
 
 /* CTA Buttons */
 .htb-hero-buttons {
     display: flex;
     gap: 1rem;
-    margin-top: 1rem;
+    margin-top: 2rem;
     flex-wrap: wrap;
     justify-content: center;
 }
@@ -233,29 +254,30 @@
     background: linear-gradient(135deg, #52B788 0%, #40916C 100%);
     color: #FFFFFF;
     box-shadow:
-        0 4px 15px rgba(82, 183, 136, 0.3),
-        0 2px 4px rgba(0, 0, 0, 0.1);
+        0 8px 30px rgba(82, 183, 136, 0.4),
+        0 4px 12px rgba(0, 0, 0, 0.15),
+        0 0 0 1px rgba(255, 255, 255, 0.1) inset;
 }
 
 .htb-btn-primary:hover {
-    transform: translateY(-3px);
+    transform: translateY(-5px);
     box-shadow:
-        0 8px 25px rgba(82, 183, 136, 0.4),
-        0 4px 8px rgba(0, 0, 0, 0.15);
+        0 16px 50px rgba(82, 183, 136, 0.5),
+        0 8px 20px rgba(0, 0, 0, 0.2),
+        0 0 0 1px rgba(255, 255, 255, 0.15) inset;
 }
 
 .htb-btn-secondary {
-    background: rgba(255, 255, 255, 0.1);
-    color: #FFFFFF;
-    border: 2px solid rgba(212, 165, 116, 0.5);
-    backdrop-filter: blur(10px);
+    background: transparent;
+    color: #1B4332;
+    border: 2px solid #1B4332;
 }
 
 .htb-btn-secondary:hover {
-    background: rgba(212, 165, 116, 0.2);
-    border-color: #D4A574;
+    background: #1B4332;
+    color: #FFFFFF;
     transform: translateY(-3px);
-    box-shadow: 0 8px 25px rgba(212, 165, 116, 0.2);
+    box-shadow: 0 8px 25px rgba(27, 67, 50, 0.2);
 }
 
 /* Trust Badges */
@@ -272,19 +294,32 @@
     align-items: center;
     gap: 0.5rem;
     padding: 0.5rem 1rem;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: linear-gradient(135deg, #52B788 0%, #40916C 100%);
+    border: none;
     border-radius: 100px;
-    backdrop-filter: blur(10px);
+    box-shadow:
+        0 6px 25px rgba(82, 183, 136, 0.4),
+        0 3px 10px rgba(0, 0, 0, 0.12),
+        0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+    transition: all 0.3s ease;
+    cursor: default;
+}
+
+.htb-trust-badge:hover {
+    transform: translateY(-4px);
+    box-shadow:
+        0 12px 40px rgba(82, 183, 136, 0.5),
+        0 6px 16px rgba(0, 0, 0, 0.18),
+        0 0 0 1px rgba(255, 255, 255, 0.15) inset;
 }
 
 .htb-trust-badge svg {
-    color: #52B788;
+    color: #FFFFFF;
     flex-shrink: 0;
 }
 
 .htb-trust-badge span {
-    color: rgba(255, 255, 255, 0.8);
+    color: #FFFFFF;
     font-size: 0.875rem;
     font-weight: 500;
     white-space: nowrap;
