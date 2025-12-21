@@ -1,0 +1,605 @@
+/**
+ * Happy Turtle Security Dashboard Admin Styles
+ *
+ * @package HappyTurtle_FSE
+ * @since 1.0.0
+ */
+
+/* ========================================
+   DASHBOARD LAYOUT
+   ======================================== */
+
+.happyturtle-security-dashboard,
+.happyturtle-security-logs,
+.happyturtle-ip-whitelist,
+.happyturtle-security-settings {
+    max-width: 1400px;
+}
+
+.happyturtle-security-dashboard h1,
+.happyturtle-security-logs h1,
+.happyturtle-ip-whitelist h1,
+.happyturtle-security-settings h1 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 2rem;
+}
+
+.happyturtle-security-dashboard h1 .dashicons,
+.happyturtle-security-logs h1 .dashicons,
+.happyturtle-ip-whitelist h1 .dashicons,
+.happyturtle-security-settings h1 .dashicons {
+    font-size: 32px;
+    color: #2D6A4F;
+}
+
+/* ========================================
+   STATISTICS CARDS
+   ======================================== */
+
+.htb-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.htb-stat-card {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+}
+
+.htb-stat-card:hover {
+    box-shadow: 0 4px 12px rgba(45, 106, 79, 0.15);
+    transform: translateY(-2px);
+}
+
+.htb-stat-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.htb-stat-icon .dashicons {
+    font-size: 32px;
+    color: #fff;
+}
+
+.htb-stat-total .htb-stat-icon {
+    background: linear-gradient(135deg, #2D6A4F, #40916C);
+}
+
+.htb-stat-success .htb-stat-icon {
+    background: linear-gradient(135deg, #2D6A4F, #52B788);
+}
+
+.htb-stat-failed .htb-stat-icon {
+    background: linear-gradient(135deg, #D4A574, #B8854A);
+}
+
+.htb-stat-blocked .htb-stat-icon {
+    background: linear-gradient(135deg, #dc3545, #c82333);
+}
+
+.htb-stat-content {
+    flex: 1;
+}
+
+.htb-stat-value {
+    font-size: 28px;
+    font-weight: 700;
+    color: #1e293b;
+    line-height: 1.2;
+}
+
+.htb-stat-label {
+    font-size: 14px;
+    color: #64748b;
+    margin-top: 4px;
+}
+
+.htb-stat-percentage {
+    font-size: 12px;
+    color: #2D6A4F;
+    font-weight: 600;
+    margin-top: 4px;
+}
+
+/* ========================================
+   DASHBOARD PANELS
+   ======================================== */
+
+.htb-dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.htb-dashboard-panel {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.htb-dashboard-panel h2 {
+    margin: 0 0 1rem 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #1e293b;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #f1f5f9;
+}
+
+.htb-panel-chart {
+    grid-column: span 2;
+}
+
+.htb-panel-logs {
+    grid-column: span 2;
+}
+
+/* ========================================
+   MINI TABLE
+   ======================================== */
+
+.htb-mini-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.htb-mini-table th,
+.htb-mini-table td {
+    padding: 12px 8px;
+    text-align: left;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.htb-mini-table th {
+    font-weight: 600;
+    color: #64748b;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.htb-mini-table td {
+    font-size: 14px;
+    color: #1e293b;
+}
+
+.htb-mini-table tbody tr:hover {
+    background: #f8fafc;
+}
+
+.htb-success-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 12px;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+/* ========================================
+   LOG LIST
+   ======================================== */
+
+.htb-log-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    max-height: 500px;
+    overflow-y: auto;
+    margin-bottom: 1rem;
+}
+
+.htb-log-item {
+    display: flex;
+    gap: 1rem;
+    padding: 12px;
+    background: #f8fafc;
+    border-radius: 8px;
+    border-left: 4px solid #94a3b8;
+    transition: all 0.2s ease;
+}
+
+.htb-log-item:hover {
+    background: #f1f5f9;
+    transform: translateX(4px);
+}
+
+.htb-log-item.htb-log-success {
+    border-left-color: #2D6A4F;
+}
+
+.htb-log-item.htb-log-failed {
+    border-left-color: #D4A574;
+}
+
+.htb-log-item.htb-log-blocked {
+    border-left-color: #dc3545;
+}
+
+.htb-log-icon {
+    flex-shrink: 0;
+}
+
+.htb-log-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.htb-log-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+}
+
+.htb-log-title strong {
+    font-size: 14px;
+    color: #1e293b;
+}
+
+.htb-log-status {
+    font-size: 11px;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 4px;
+    background: #e2e8f0;
+    color: #64748b;
+    font-weight: 600;
+}
+
+.htb-log-meta {
+    font-size: 12px;
+    color: #64748b;
+    margin-bottom: 4px;
+}
+
+.htb-log-meta code {
+    background: #e2e8f0;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 11px;
+}
+
+.htb-log-time {
+    font-size: 11px;
+    color: #94a3b8;
+}
+
+/* ========================================
+   ALERTS PANEL
+   ======================================== */
+
+.htb-no-alerts {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: #64748b;
+}
+
+.htb-alert-item {
+    display: flex;
+    gap: 1rem;
+    padding: 12px;
+    background: #fef3c7;
+    border-radius: 8px;
+    border-left: 4px solid #f59e0b;
+    margin-bottom: 1rem;
+}
+
+.htb-alert-item.htb-alert-high {
+    background: #fee2e2;
+    border-left-color: #dc2626;
+}
+
+.htb-alert-item.htb-alert-medium {
+    background: #fef3c7;
+    border-left-color: #f59e0b;
+}
+
+.htb-alert-icon {
+    flex-shrink: 0;
+    color: #f59e0b;
+}
+
+.htb-alert-item.htb-alert-high .htb-alert-icon {
+    color: #dc2626;
+}
+
+.htb-alert-content strong {
+    display: block;
+    color: #1e293b;
+    margin-bottom: 4px;
+}
+
+.htb-alert-content p {
+    margin: 0;
+    font-size: 13px;
+    color: #64748b;
+}
+
+.htb-alert-content small {
+    font-size: 11px;
+    color: #94a3b8;
+}
+
+/* ========================================
+   FILTERS PANEL
+   ======================================== */
+
+.htb-filters-panel {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.htb-filters-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.htb-filter-group label {
+    display: block;
+    font-weight: 600;
+    font-size: 12px;
+    color: #64748b;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.htb-filter-group input,
+.htb-filter-group select {
+    width: 100%;
+}
+
+.htb-filter-actions {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+/* ========================================
+   RESULTS SUMMARY
+   ======================================== */
+
+.htb-results-summary {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 1rem;
+    font-size: 14px;
+    color: #64748b;
+}
+
+.htb-results-summary strong {
+    color: #1e293b;
+}
+
+/* ========================================
+   LOGS TABLE
+   ======================================== */
+
+.htb-logs-table {
+    font-size: 13px;
+}
+
+.htb-logs-table th {
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-size: 11px;
+    color: #64748b;
+}
+
+.htb-logs-table td {
+    vertical-align: middle;
+}
+
+.htb-logs-table code {
+    background: #f1f5f9;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    color: #1e293b;
+}
+
+.htb-status-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 12px;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+/* ========================================
+   MODAL
+   ======================================== */
+
+.htb-modal {
+    display: none;
+    position: fixed;
+    z-index: 100000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.htb-modal-content {
+    background: #fff;
+    margin: 5% auto;
+    padding: 2rem;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 800px;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateY(-50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.htb-modal-close {
+    color: #94a3b8;
+    float: right;
+    font-size: 32px;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.htb-modal-close:hover {
+    color: #1e293b;
+}
+
+.htb-details-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.htb-details-table th,
+.htb-details-table td {
+    padding: 12px;
+    border-bottom: 1px solid #e2e8f0;
+    text-align: left;
+}
+
+.htb-details-table th {
+    font-weight: 600;
+    color: #64748b;
+    width: 180px;
+    vertical-align: top;
+}
+
+.htb-details-table td {
+    color: #1e293b;
+}
+
+.htb-details-table pre {
+    background: #f8fafc;
+    padding: 12px;
+    border-radius: 6px;
+    overflow-x: auto;
+    font-size: 12px;
+    margin: 0;
+}
+
+/* ========================================
+   SETTINGS PAGE
+   ======================================== */
+
+.htb-settings-panel {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.htb-settings-panel h2 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0 0 0.5rem 0;
+    font-size: 18px;
+    color: #1e293b;
+}
+
+.htb-settings-panel > p {
+    color: #64748b;
+    margin-bottom: 1.5rem;
+}
+
+.htb-action-buttons {
+    margin-top: 1rem;
+}
+
+/* ========================================
+   WHITELIST PAGE
+   ======================================== */
+
+.htb-add-ip-panel {
+    background: linear-gradient(135deg, #f8fafc, #fff);
+    border: 2px solid #2D6A4F;
+}
+
+.htb-empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: #64748b;
+}
+
+/* ========================================
+   RESPONSIVE
+   ======================================== */
+
+@media (max-width: 1200px) {
+    .htb-dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .htb-panel-chart,
+    .htb-panel-logs {
+        grid-column: span 1;
+    }
+}
+
+@media (max-width: 768px) {
+    .htb-stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .htb-filters-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .htb-stat-card {
+        flex-direction: column;
+        text-align: center;
+    }
+}

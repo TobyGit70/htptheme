@@ -1,0 +1,370 @@
+<?php
+/**
+ * Template Name: Shopping Cart
+ * Template for displaying shopping cart
+ *
+ * @package HappyTurtle_FSE
+ */
+
+// Require authentication for shopping cart (Arkansas compliance)
+if (!is_user_logged_in()) {
+    wp_redirect(home_url('/b2b-login/'));
+    exit;
+}
+
+// Verify partner role
+$user = wp_get_current_user();
+if (!in_array('partner', (array) $user->roles) && !in_array('administrator', (array) $user->roles)) {
+    wp_redirect(home_url('/'));
+    exit;
+}
+
+get_header();
+
+// Get current user
+$user_id = get_current_user_id();
+
+// Get cart from user meta
+$cart = get_user_meta($user_id, '_htb_cart', true);
+if (!is_array($cart)) {
+    $cart = array();
+}
+
+// Get partner ID for the current user
+global $wpdb;
+$partner_id = $wpdb->get_var($wpdb->prepare(
+    "SELECT id FROM {$wpdb->prefix}1_happyturtle_partners WHERE wp_user_id = %d",
+    $user_id
+));
+
+// Calculate cart totals
+$cart_items = array();
+$subtotal = 0;
+
+foreach ($cart as $product_id => $item) {
+    $product = get_post($product_id);
+
+    // Skip if product doesn't exist or isn't published
+    if (!$product || $product->post_status !== 'publish') {
+        continue;
+    }
+
+    // Get product meta
+    $sku = get_post_meta($product_id, '_sku', true);
+    $wholesale_price = floatval(get_post_meta($product_id, '_wholesale_price', true));
+    $stock_quantity = intval(get_post_meta($product_id, '_stock_quantity', true));
+    $minimum_order = intval(get_post_meta($product_id, '_minimum_order', true));
+    $tiered_pricing = get_post_meta($product_id, '_tiered_pricing', true);
+    $unit_type = get_post_meta($product_id, '_unit_type', true);
+
+    // Get category
+    $categories = get_the_terms($product_id, 'product_category');
+    $category = $categories && !is_wp_error($categories) ? $categories[0] : null;
+
+    $quantity = intval($item['quantity']);
+
+    // Calculate price (check tiered pricing)
+    $item_price = $wholesale_price;
+    if ($tiered_pricing && is_array($tiered_pricing)) {
+        foreach (array_reverse($tiered_pricing) as $tier) {
+            if ($quantity >= intval($tier['min_qty'])) {
+                $item_price = floatval($tier['price']);
+                break;
+            }
+        }
+    }
+
+    $line_total = $item_price * $quantity;
+    $subtotal += $line_total;
+
+    $cart_items[] = array(
+        'product_id' => $product_id,
+        'product' => $product,
+        'sku' => $sku,
+        'quantity' => $quantity,
+        'price' => $item_price,
+        'original_price' => $wholesale_price,
+        'line_total' => $line_total,
+        'stock_quantity' => $stock_quantity,
+        'minimum_order' => $minimum_order,
+        'unit_type' => $unit_type,
+        'category' => $category,
+        'has_discount' => $item_price < $wholesale_price
+    );
+}
+
+// Calculate transport fees
+$transport_fee = 0;
+if (class_exists('HappyTurtle_Order_Settings')) {
+    $transport_fee = HappyTurtle_Order_Settings::calculate_transport_fee($cart_items, $subtotal);
+}
+
+// Calculate total
+$total = $subtotal + $transport_fee;
+
+?>
+
+<main id="main" class="htb-cart-page">
+
+    <div class="htb-container">
+
+        <!-- Page Header -->
+        <header class="htb-cart-header">
+            <h1>Shopping Cart</h1>
+            <?php if (!empty($cart_items)): ?>
+                <p class="htb-cart-count"><?php echo count($cart_items); ?> <?php echo count($cart_items) === 1 ? 'item' : 'items'; ?> in your cart</p>
+            <?php endif; ?>
+        </header>
+
+        <?php if (empty($cart_items)): ?>
+
+            <!-- Empty Cart State -->
+            <div class="htb-empty-cart">
+                <svg width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                    <circle cx="9" cy="21" r="1"></circle>
+                    <circle cx="20" cy="21" r="1"></circle>
+                    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                </svg>
+                <h2>Your cart is empty</h2>
+                <p>Browse our product catalog and add items to your order request.</p>
+                <a href="<?php echo get_post_type_archive_link('htb_product'); ?>" class="htp-btn htp-btn-primary">
+                    Browse Products
+                </a>
+            </div>
+
+        <?php else: ?>
+
+            <!-- Cart Content -->
+            <div class="htb-cart-content">
+
+                <!-- Cart Items -->
+                <div class="htb-cart-items">
+
+                    <div class="htb-cart-table">
+                        <!-- Table Header -->
+                        <div class="htb-cart-table-header">
+                            <div class="htb-cart-col-product">Product</div>
+                            <div class="htb-cart-col-price">Price</div>
+                            <div class="htb-cart-col-quantity">Quantity</div>
+                            <div class="htb-cart-col-total">Total</div>
+                            <div class="htb-cart-col-remove"></div>
+                        </div>
+
+                        <!-- Cart Items -->
+                        <?php foreach ($cart_items as $item): ?>
+                            <div class="htb-cart-item" data-product-id="<?php echo $item['product_id']; ?>">
+
+                                <!-- Product Info -->
+                                <div class="htb-cart-col-product">
+                                    <div class="htb-cart-product-image">
+                                        <?php if (has_post_thumbnail($item['product_id'])): ?>
+                                            <?php echo get_the_post_thumbnail($item['product_id'], 'thumbnail'); ?>
+                                        <?php else: ?>
+                                            <div class="htb-cart-placeholder">
+                                                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                                    <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                                                    <polyline points="21 15 16 10 5 21"></polyline>
+                                                </svg>
+                                            </div>
+                                        <?php endif; ?>
+                                    </div>
+                                    <div class="htb-cart-product-info">
+                                        <h3>
+                                            <a href="<?php echo get_permalink($item['product_id']); ?>">
+                                                <?php echo esc_html($item['product']->post_title); ?>
+                                            </a>
+                                        </h3>
+                                        <p class="htb-cart-sku">SKU: <?php echo esc_html($item['sku']); ?></p>
+                                        <?php if ($item['category']): ?>
+                                            <span class="htb-cart-category"><?php echo esc_html($item['category']->name); ?></span>
+                                        <?php endif; ?>
+
+                                        <!-- Stock Warning -->
+                                        <?php if ($item['quantity'] > $item['stock_quantity']): ?>
+                                            <div class="htp-alert htp-alert-warning" style="margin-top: 0.5rem; padding: 0.5rem;">
+                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                                                    <line x1="12" y1="9" x2="12" y2="13"></line>
+                                                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                                                </svg>
+                                                Only <?php echo $item['stock_quantity']; ?> available
+                                            </div>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+
+                                <!-- Price -->
+                                <div class="htb-cart-col-price">
+                                    <div class="htb-cart-price">
+                                        <?php if ($item['has_discount']): ?>
+                                            <span class="htb-cart-price-original">$<?php echo number_format($item['original_price'], 2); ?></span>
+                                            <span class="htb-cart-price-discounted">$<?php echo number_format($item['price'], 2); ?></span>
+                                        <?php else: ?>
+                                            <span class="htb-cart-price-regular">$<?php echo number_format($item['price'], 2); ?></span>
+                                        <?php endif; ?>
+                                        <?php if ($item['unit_type']): ?>
+                                            <span class="htb-cart-unit">per <?php echo esc_html($item['unit_type']); ?></span>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+
+                                <!-- Quantity -->
+                                <div class="htb-cart-col-quantity">
+                                    <div class="htb-cart-quantity-selector">
+                                        <button
+                                            type="button"
+                                            class="htb-qty-btn htb-qty-minus"
+                                            data-product-id="<?php echo $item['product_id']; ?>"
+                                            aria-label="Decrease quantity">−</button>
+                                        <input
+                                            type="number"
+                                            class="htb-cart-quantity-input"
+                                            value="<?php echo $item['quantity']; ?>"
+                                            min="<?php echo $item['minimum_order'] ? $item['minimum_order'] : 1; ?>"
+                                            max="<?php echo $item['stock_quantity']; ?>"
+                                            data-product-id="<?php echo $item['product_id']; ?>"
+                                            step="1">
+                                        <button
+                                            type="button"
+                                            class="htb-qty-btn htb-qty-plus"
+                                            data-product-id="<?php echo $item['product_id']; ?>"
+                                            aria-label="Increase quantity">+</button>
+                                    </div>
+                                </div>
+
+                                <!-- Line Total -->
+                                <div class="htb-cart-col-total">
+                                    <span class="htb-cart-line-total">$<?php echo number_format($item['line_total'], 2); ?></span>
+                                </div>
+
+                                <!-- Remove Button -->
+                                <div class="htb-cart-col-remove">
+                                    <button
+                                        type="button"
+                                        class="htb-cart-remove-btn"
+                                        data-product-id="<?php echo $item['product_id']; ?>"
+                                        aria-label="Remove item">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <polyline points="3 6 5 6 21 6"></polyline>
+                                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                            <line x1="10" y1="11" x2="10" y2="17"></line>
+                                            <line x1="14" y1="11" x2="14" y2="17"></line>
+                                        </svg>
+                                    </button>
+                                </div>
+
+                            </div>
+                        <?php endforeach; ?>
+
+                    </div>
+
+                    <!-- Cart Actions -->
+                    <div class="htb-cart-actions">
+                        <a href="<?php echo get_post_type_archive_link('htb_product'); ?>" class="htp-btn htp-btn-secondary">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="19" y1="12" x2="5" y2="12"></line>
+                                <polyline points="12 19 5 12 12 5"></polyline>
+                            </svg>
+                            Continue Shopping
+                        </a>
+
+                        <button type="button" class="htp-btn htp-btn-outline htb-clear-cart-btn">
+                            Clear Cart
+                        </button>
+                    </div>
+
+                </div>
+
+                <!-- Cart Summary Sidebar -->
+                <aside class="htb-cart-summary">
+
+                    <div class="htb-cart-summary-card htp-card-cart elevation-3">
+                        <h2>Order Summary</h2>
+
+                        <div class="htb-summary-row">
+                            <span>Subtotal:</span>
+                            <span class="htb-summary-subtotal">$<?php echo number_format($subtotal, 2); ?></span>
+                        </div>
+
+                        <?php if ($transport_fee > 0): ?>
+                            <div class="htb-summary-row">
+                                <span>Transport Fee:</span>
+                                <span class="htb-summary-transport">$<?php echo number_format($transport_fee, 2); ?></span>
+                            </div>
+                        <?php endif; ?>
+
+                        <div class="htb-summary-divider"></div>
+
+                        <div class="htb-summary-row htb-summary-total-row">
+                            <span>Total:</span>
+                            <span class="htb-summary-total">$<?php echo number_format($total, 2); ?></span>
+                        </div>
+
+                        <!-- Checkout Button -->
+                        <a href="<?php echo site_url('/checkout'); ?>" class="htp-btn htp-btn-primary htp-btn-block">
+                            Proceed to Checkout
+                        </a>
+
+                        <!-- Payment Terms Info -->
+                        <?php
+                        $payment_terms = get_option('htb_default_payment_terms', 'net_30');
+                        $payment_terms_label = '';
+                        switch ($payment_terms) {
+                            case 'net_15': $payment_terms_label = 'Net-15'; break;
+                            case 'net_30': $payment_terms_label = 'Net-30'; break;
+                            case 'net_45': $payment_terms_label = 'Net-45'; break;
+                            case 'net_60': $payment_terms_label = 'Net-60'; break;
+                            case 'net_90': $payment_terms_label = 'Net-90'; break;
+                            case 'cod': $payment_terms_label = 'Cash on Delivery'; break;
+                            case 'prepaid': $payment_terms_label = 'Prepaid'; break;
+                            default: $payment_terms_label = 'Custom Terms';
+                        }
+                        ?>
+
+                        <div class="htb-payment-terms-info">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="16" x2="12" y2="12"></line>
+                                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                            </svg>
+                            <span>Default payment terms: <strong><?php echo esc_html($payment_terms_label); ?></strong></span>
+                        </div>
+
+                    </div>
+
+                    <!-- Trust Badges -->
+                    <div class="htb-trust-badges">
+                        <div class="htb-trust-badge">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                            </svg>
+                            <span>Secure Ordering</span>
+                        </div>
+                        <div class="htb-trust-badge">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                                <line x1="1" y1="10" x2="23" y2="10"></line>
+                            </svg>
+                            <span>Flexible Payment</span>
+                        </div>
+                        <div class="htb-trust-badge">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                <circle cx="12" cy="10" r="3"></circle>
+                            </svg>
+                            <span>Local Delivery</span>
+                        </div>
+                    </div>
+
+                </aside>
+
+            </div>
+
+        <?php endif; ?>
+
+    </div>
+
+</main>
+
+<?php get_footer(); ?>

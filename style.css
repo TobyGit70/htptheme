@@ -1,0 +1,48 @@
+/*
+Theme Name: Happy Turtle FSE
+Theme URI: https://happyturtleprocessing.com
+Author: Happy Turtle Processing
+Author URI: https://happyturtleprocessing.com
+Description: Full Site Editing theme for Happy Turtle Processing with complete customization capabilities
+Version: 1.0.0
+License: GPL v2 or later
+Text Domain: happyturtle-fse
+Tags: full-site-editing, block-patterns, block-styles, custom-colors, custom-logo, custom-menu, editor-style, featured-images, footer-widgets, threaded-comments, translation-ready
+
+This theme requires WordPress 6.0 or newer.
+*/
+/* WordPress Block Editor Text Alignment */
+.has-text-align-center {
+    text-align: center !important;
+}
+
+.has-text-align-left {
+    text-align: left !important;
+}
+
+.has-text-align-right {
+    text-align: right !important;
+}
+
+/* Force headings to be full-width block elements */
+.wp-block-heading {
+    display: block !important;
+    width: 100% !important;
+}
+
+/* Legal Pages Heading Hierarchy */
+.wp-block-heading.has-text-color[style*='#D4A574'] {
+    font-weight: 700;
+}
+
+/* H3 subsection headings should be smaller and less prominent */
+h3.wp-block-heading.has-text-color[style*='#D4A574'] {
+    font-size: 1.5rem !important;
+    font-weight: 600 !important;
+}
+
+/* H2 main section headings */
+h2.wp-block-heading.has-text-color[style*='#D4A574'] {
+    font-size: 2rem !important;
+    font-weight: 700 !important;
+}

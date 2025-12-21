@@ -1,0 +1,36 @@
+<!-- wp:group {"style":{"spacing":{"padding":{"top":"1rem","right":"2rem","bottom":"1rem","left":"2rem"}}},"textColor":"base","className":"site-header","layout":{"type":"constrained"}} -->
+<div class="wp-block-group site-header has-base-color has-text-color" style="padding-top:1rem;padding-right:2rem;padding-bottom:1rem;padding-left:2rem">
+    <!-- wp:group {"layout":{"type":"flex","flexWrap":"nowrap","justifyContent":"space-between"}} -->
+    <div class="wp-block-group">
+        <!-- wp:group {"style":{"spacing":{"blockGap":"1rem"}},"layout":{"type":"flex","flexWrap":"nowrap"}} -->
+        <div class="wp-block-group">
+            <!-- wp:site-logo {"width":200,"shouldSyncIcon":false} /-->
+
+            <!-- wp:group {"layout":{"type":"flex","orientation":"vertical","justifyContent":"left"}} -->
+            <div class="wp-block-group">
+                <!-- wp:site-title {"level":0,"style":{"typography":{"fontSize":"1.5rem","fontWeight":"700"},"color":{"text":"#FFFFFF"}}} /-->
+                <!-- wp:site-tagline {"style":{"typography":{"fontSize":"0.875rem"},"color":{"text":"#D4A574"}}} /-->
+            </div>
+            <!-- /wp:group -->
+        </div>
+        <!-- /wp:group -->
+
+        <!-- wp:group {"layout":{"type":"flex","flexWrap":"wrap","justifyContent":"right"},"style":{"spacing":{"blockGap":"2rem"}}} -->
+        <div class="wp-block-group">
+            <!-- wp:navigation {"textColor":"base","overlayBackgroundColor":"charcoal","overlayTextColor":"base","icon":"menu","layout":{"type":"flex","justifyContent":"right"},"style":{"spacing":{"blockGap":"2rem"}}} -->
+                <!-- wp:navigation-link {"label":"About","url":"/#about"} /-->
+                <!-- wp:navigation-link {"label":"What We Do","url":"/#what-we-do"} /-->
+                <!-- wp:navigation-link {"label":"Contact","url":"/contact/"} /-->
+            <!-- /wp:navigation -->
+
+            <!-- wp:html -->
+            <button onclick="event.preventDefault(); window.htbShowSplash(); return false;" type="button" style="background:#D4A574;color:#1B4332;border:none;padding:0.5rem 1rem;border-radius:8px;cursor:pointer;font-weight:700;font-size:0.875rem;transition:all 0.3s ease;box-shadow:0 2px 8px rgba(212,165,116,0.3);display:flex;align-items:center;gap:0.5rem;" onmouseover="this.style.transform='scale(1.05)';this.style.boxShadow='0 4px 12px rgba(212,165,116,0.5)'" onmouseout="this.style.transform='scale(1)';this.style.boxShadow='0 2px 8px rgba(212,165,116,0.3)'">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg> Splash
+            </button>
+            <!-- /wp:html -->
+        </div>
+        <!-- /wp:group -->
+    </div>
+    <!-- /wp:group -->
+</div>
+<!-- /wp:group -->

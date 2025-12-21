@@ -1,0 +1,239 @@
+<!-- wp:template-part {"slug":"header","tagName":"header"} /-->
+
+<!-- wp:group {"tagName":"main","style":{"spacing":{"padding":{"top":"4rem","bottom":"4rem"}}},"backgroundColor":"light","layout":{"type":"constrained"}} -->
+<main class="wp-block-group has-light-background-color has-background" style="padding-top:4rem;padding-bottom:4rem">
+
+    <!-- wp:heading {"textAlign":"center","style":{"spacing":{"margin":{"bottom":"1rem"}}},"fontSize":"xx-large"} -->
+    <h1 class="wp-block-heading has-text-align-center has-xx-large-font-size htb-gradient-text" style="margin-bottom:1rem;font-size:3rem;font-weight:700">API Documentation</h1>
+    <!-- /wp:heading -->
+
+    <!-- wp:paragraph {"align":"center","style":{"color":{"text":"#2D6A4F"},"spacing":{"margin":{"bottom":"3rem"}}}} -->
+    <p class="has-text-align-center has-text-color" style="color:#2D6A4F;margin-bottom:3rem">Happy Turtle Processing B2B API Reference</p>
+    <!-- /wp:paragraph -->
+
+    <!-- wp:html -->
+    <div style="max-width:1000px;margin:0 auto;padding:0 2rem;">
+
+        <!-- Getting Started -->
+        <div style="background:white;border-radius:16px;padding:3rem;margin-bottom:2rem;box-shadow:0 4px 20px rgba(0,0,0,0.08);">
+            <h2 style="color:#1B4332;margin-bottom:1rem;">Getting Started</h2>
+
+            <h3 style="color:#2D6A4F;margin-top:2rem;margin-bottom:1rem;">Base URL</h3>
+            <pre style="background:#1e293b;color:#e2e8f0;padding:1rem;border-radius:8px;overflow-x:auto;"><code>https://happyturtleprocessing.com/wp-json/happyturtle/v1</code></pre>
+
+            <h3 style="color:#2D6A4F;margin-top:2rem;margin-bottom:1rem;">Authentication</h3>
+            <p style="margin-bottom:1rem;">All API requests require authentication using API Key and API Secret in the request headers:</p>
+            <pre style="background:#1e293b;color:#e2e8f0;padding:1rem;border-radius:8px;overflow-x:auto;"><code>X-API-Key: your_api_key
+X-API-Secret: your_api_secret</code></pre>
+
+            <div style="background:#fff3cd;border-left:4px solid #ffc107;padding:1rem;margin-top:1rem;border-radius:4px;">
+                <strong>⚠️ Important:</strong> Store your API credentials securely. Never expose them in client-side code or public repositories.
+            </div>
+        </div>
+
+        <!-- Products -->
+        <div style="background:white;border-radius:16px;padding:3rem;margin-bottom:2rem;box-shadow:0 4px 20px rgba(0,0,0,0.08);">
+            <h2 style="color:#1B4332;margin-bottom:1.5rem;">Products API</h2>
+
+            <div style="margin-bottom:3rem;">
+                <h3 style="color:#2D6A4F;margin-bottom:1rem;">GET /products</h3>
+                <p style="margin-bottom:1rem;">Retrieve all available products</p>
+
+                <strong>Query Parameters:</strong>
+                <ul style="margin:1rem 0;">
+                    <li><code>category</code> (optional) - Filter by category (e.g., "Concentrates", "Vape Cartridges")</li>
+                </ul>
+
+                <strong>Example Request:</strong>
+                <pre style="background:#1e293b;color:#e2e8f0;padding:1rem;border-radius:8px;overflow-x:auto;margin-top:0.5rem;"><code>curl -X GET "https://happyturtleprocessing.com/wp-json/happyturtle/v1/products?category=Concentrates" \
+  -H "X-API-Key: your_api_key" \
+  -H "X-API-Secret: your_api_secret"</code></pre>
+
+                <strong>Example Response:</strong>
+                <pre style="background:#1e293b;color:#e2e8f0;padding:1rem;border-radius:8px;overflow-x:auto;margin-top:0.5rem;"><code>{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "sku": "HTP-LR-001",
+      "product_name": "Blue Dream Live Resin",
+      "category": "Concentrates",
+      "subcategory": "Live Resin",
+      "thc_percentage": "78.50",
+      "cbd_percentage": "0.80",
+      "unit_type": "gram",
+      "unit_price": "35.00",
+      "minimum_order": 5,
+      "stock_quantity": 250
+    }
+  ],
+  "count": 1
+}</code></pre>
+            </div>
+
+            <div style="margin-bottom:3rem;">
+                <h3 style="color:#2D6A4F;margin-bottom:1rem;">GET /products/{id}</h3>
+                <p style="margin-bottom:1rem;">Retrieve a single product by ID</p>
+
+                <strong>Example Request:</strong>
+                <pre style="background:#1e293b;color:#e2e8f0;padding:1rem;border-radius:8px;overflow-x:auto;margin-top:0.5rem;"><code>curl -X GET "https://happyturtleprocessing.com/wp-json/happyturtle/v1/products/1" \
+  -H "X-API-Key: your_api_key" \
+  -H "X-API-Secret: your_api_secret"</code></pre>
+            </div>
+
+            <div>
+                <h3 style="color:#2D6A4F;margin-bottom:1rem;">GET /categories</h3>
+                <p style="margin-bottom:1rem;">Get all product categories</p>
+
+                <strong>Example Response:</strong>
+                <pre style="background:#1e293b;color:#e2e8f0;padding:1rem;border-radius:8px;overflow-x:auto;margin-top:0.5rem;"><code>{
+  "success": true,
+  "data": [
+    "Concentrates",
+    "Vape Cartridges",
+    "Edibles",
+    "Pre-Rolls"
+  ],
+  "count": 4
+}</code></pre>
+            </div>
+        </div>
+
+        <!-- Inventory -->
+        <div style="background:white;border-radius:16px;padding:3rem;margin-bottom:2rem;box-shadow:0 4px 20px rgba(0,0,0,0.08);">
+            <h2 style="color:#1B4332;margin-bottom:1.5rem;">Inventory API</h2>
+
+            <div>
+                <h3 style="color:#2D6A4F;margin-bottom:1rem;">GET /inventory</h3>
+                <p style="margin-bottom:1rem;">Get current inventory levels for all products</p>
+
+                <strong>Example Response:</strong>
+                <pre style="background:#1e293b;color:#e2e8f0;padding:1rem;border-radius:8px;overflow-x:auto;margin-top:0.5rem;"><code>{
+  "success": true,
+  "data": [
+    {
+      "product_id": 1,
+      "sku": "HTP-LR-001",
+      "product_name": "Blue Dream Live Resin",
+      "category": "Concentrates",
+      "stock_quantity": 250,
+      "unit_type": "gram",
+      "unit_price": "35.00",
+      "minimum_order": 5,
+      "available": true
+    }
+  ],
+  "count": 1
+}</code></pre>
+            </div>
+        </div>
+
+        <!-- Orders -->
+        <div style="background:white;border-radius:16px;padding:3rem;margin-bottom:2rem;box-shadow:0 4px 20px rgba(0,0,0,0.08);">
+            <h2 style="color:#1B4332;margin-bottom:1.5rem;">Orders API</h2>
+
+            <div style="margin-bottom:3rem;">
+                <h3 style="color:#2D6A4F;margin-bottom:1rem;">POST /orders</h3>
+                <p style="margin-bottom:1rem;">Create a new order</p>
+
+                <strong>Request Body:</strong>
+                <pre style="background:#1e293b;color:#e2e8f0;padding:1rem;border-radius:8px;overflow-x:auto;margin-top:0.5rem;"><code>{
+  "items": [
+    {
+      "product_id": 1,
+      "quantity": 10
+    },
+    {
+      "product_id": 4,
+      "quantity": 25
+    }
+  ]
+}</code></pre>
+
+                <strong>Example Request:</strong>
+                <pre style="background:#1e293b;color:#e2e8f0;padding:1rem;border-radius:8px;overflow-x:auto;margin-top:0.5rem;"><code>curl -X POST "https://happyturtleprocessing.com/wp-json/happyturtle/v1/orders" \
+  -H "X-API-Key: your_api_key" \
+  -H "X-API-Secret: your_api_secret" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "items": [
+      {"product_id": 1, "quantity": 10}
+    ]
+  }'</code></pre>
+
+                <strong>Example Response:</strong>
+                <pre style="background:#1e293b;color:#e2e8f0;padding:1rem;border-radius:8px;overflow-x:auto;margin-top:0.5rem;"><code>{
+  "success": true,
+  "message": "Order created successfully and pending approval",
+  "order_id": 42
+}</code></pre>
+            </div>
+
+            <div style="margin-bottom:3rem;">
+                <h3 style="color:#2D6A4F;margin-bottom:1rem;">GET /orders</h3>
+                <p style="margin-bottom:1rem;">Retrieve your orders</p>
+
+                <strong>Query Parameters:</strong>
+                <ul style="margin:1rem 0;">
+                    <li><code>status</code> (optional) - Filter by status (e.g., "pending_approval", "approved", "completed")</li>
+                    <li><code>limit</code> (optional) - Number of results (default: 50)</li>
+                    <li><code>offset</code> (optional) - Pagination offset (default: 0)</li>
+                </ul>
+            </div>
+
+            <div>
+                <h3 style="color:#2D6A4F;margin-bottom:1rem;">GET /orders/{id}</h3>
+                <p style="margin-bottom:1rem;">Retrieve a single order by ID</p>
+            </div>
+        </div>
+
+        <!-- Error Codes -->
+        <div style="background:white;border-radius:16px;padding:3rem;margin-bottom:2rem;box-shadow:0 4px 20px rgba(0,0,0,0.08);">
+            <h2 style="color:#1B4332;margin-bottom:1.5rem;">Error Codes</h2>
+
+            <table style="width:100%;border-collapse:collapse;">
+                <thead>
+                    <tr style="background:#2D6A4F;color:white;">
+                        <th style="padding:1rem;text-align:left;">Code</th>
+                        <th style="padding:1rem;text-align:left;">Message</th>
+                        <th style="padding:1rem;text-align:left;">Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr style="border-bottom:1px solid #e5e7eb;">
+                        <td style="padding:1rem;"><code>401</code></td>
+                        <td style="padding:1rem;">Unauthorized</td>
+                        <td style="padding:1rem;">Invalid or missing API credentials</td>
+                    </tr>
+                    <tr style="border-bottom:1px solid #e5e7eb;">
+                        <td style="padding:1rem;"><code>400</code></td>
+                        <td style="padding:1rem;">Bad Request</td>
+                        <td style="padding:1rem;">Invalid request parameters or missing required fields</td>
+                    </tr>
+                    <tr style="border-bottom:1px solid #e5e7eb;">
+                        <td style="padding:1rem;"><code>404</code></td>
+                        <td style="padding:1rem;">Not Found</td>
+                        <td style="padding:1rem;">Resource not found</td>
+                    </tr>
+                    <tr>
+                        <td style="padding:1rem;"><code>500</code></td>
+                        <td style="padding:1rem;">Server Error</td>
+                        <td style="padding:1rem;">Internal server error</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Support -->
+        <div style="background:linear-gradient(135deg,#1B4332,#2D6A4F,#D4A574);border-radius:16px;padding:3rem;color:white;text-align:center;">
+            <h2 style="margin-bottom:1rem;">Need Help?</h2>
+            <p style="margin-bottom:2rem;">Our B2B support team is here to help with integration and technical questions.</p>
+            <a href="/contact/" style="display:inline-block;background:white;color:#1B4332;padding:1rem 2rem;border-radius:8px;text-decoration:none;font-weight:700;">Contact Support</a>
+        </div>
+    </div>
+    <!-- /wp:html -->
+
+</main>
+<!-- /wp:group -->
+
+<!-- wp:template-part {"slug":"footer","tagName":"footer"} /-->
