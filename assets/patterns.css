@@ -79,9 +79,43 @@
     position: relative;
     z-index: 1;
     width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
     padding: 4rem 2rem;
 }
 
+/* Top Centered Header */
+.htb-hero-header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+/* Two Column Layout */
+.htb-hero-columns {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4rem;
+}
+
+.htb-hero-col {
+    flex: 1;
+    max-width: 500px;
+}
+
+.htb-hero-col-left {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.htb-hero-col-right {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+/* Legacy centered content support */
 .htb-hero-content {
     max-width: 900px;
     margin: 0 auto;
@@ -99,15 +133,15 @@
 
 .htb-hero-video-container {
     position: relative;
-    width: 180px;
-    height: 180px;
+    width: 280px;
+    height: 280px;
     border-radius: 50%;
     overflow: hidden;
     box-shadow:
-        0 0 40px rgba(82, 183, 136, 0.3),
-        0 0 80px rgba(212, 165, 116, 0.15),
-        0 20px 40px rgba(0, 0, 0, 0.3);
-    border: 3px solid rgba(212, 165, 116, 0.4);
+        0 0 60px rgba(82, 183, 136, 0.4),
+        0 0 120px rgba(212, 165, 116, 0.2),
+        0 25px 50px rgba(0, 0, 0, 0.4);
+    border: 4px solid rgba(212, 165, 116, 0.4);
 }
 
 .htb-hero-video-container video {
@@ -268,6 +302,23 @@
 }
 
 /* Responsive Design */
+@media (max-width: 900px) {
+    .htb-hero-columns {
+        flex-direction: column;
+        gap: 2.5rem;
+    }
+
+    .htb-hero-col {
+        max-width: 100%;
+        width: 100%;
+    }
+
+    .htb-hero-col-right {
+        align-items: center;
+        text-align: center;
+    }
+}
+
 @media (max-width: 768px) {
     .htb-hero-section {
         min-height: auto;
@@ -278,13 +329,17 @@
         padding: 2rem 1rem;
     }
 
+    .htb-hero-header {
+        margin-bottom: 2rem;
+    }
+
     .htb-hero-video-container {
-        width: 140px;
-        height: 140px;
+        width: 200px;
+        height: 200px;
     }
 
     .htb-hero-logo-text {
-        font-size: 2rem;
+        font-size: 2.5rem;
     }
 
     .htb-hero-title {
@@ -319,6 +374,8 @@
 
     .htb-hero-badges {
         gap: 0.75rem;
+        flex-wrap: wrap;
+        justify-content: center;
     }
 
     .htb-trust-badge {
