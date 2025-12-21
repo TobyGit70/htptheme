@@ -20,35 +20,309 @@
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15) !important;
 }
 
-/* Hero Section */
+/* ============================================
+   HERO SECTION - Clean, Modern Design
+   ============================================ */
+
 .htb-hero-section {
     position: relative;
     overflow: hidden;
+    background: linear-gradient(135deg, #0F2419 0%, #1B4332 50%, #2D6A4F 100%);
+    min-height: 90vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
+/* Subtle animated background orbs */
 .htb-hero-section::before,
 .htb-hero-section::after {
     content: '';
     position: absolute;
     border-radius: 50%;
-    filter: blur(60px);
-    opacity: 0.3;
+    filter: blur(100px);
+    opacity: 0.15;
+    animation: float 20s ease-in-out infinite;
 }
 
 .htb-hero-section::before {
-    width: 400px;
-    height: 400px;
-    background: #9333ea;
-    top: -200px;
+    width: 500px;
+    height: 500px;
+    background: #52B788;
+    top: -150px;
     left: -100px;
 }
 
 .htb-hero-section::after {
-    width: 300px;
-    height: 300px;
-    background: #3b82f6;
-    bottom: -150px;
+    width: 400px;
+    height: 400px;
+    background: #D4A574;
+    bottom: -100px;
     right: -50px;
+    animation-delay: -10s;
+}
+
+@keyframes float {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    25% { transform: translate(30px, -30px) scale(1.05); }
+    50% { transform: translate(0, 20px) scale(0.95); }
+    75% { transform: translate(-30px, -10px) scale(1.02); }
+}
+
+/* Main Hero Container */
+.htb-hero-modern {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    padding: 4rem 2rem;
+}
+
+.htb-hero-content {
+    max-width: 900px;
+    margin: 0 auto;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+/* Animated Logo/Badge */
+.htb-hero-badge {
+    margin-bottom: 1rem;
+}
+
+.htb-hero-video-container {
+    position: relative;
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    overflow: hidden;
+    box-shadow:
+        0 0 40px rgba(82, 183, 136, 0.3),
+        0 0 80px rgba(212, 165, 116, 0.15),
+        0 20px 40px rgba(0, 0, 0, 0.3);
+    border: 3px solid rgba(212, 165, 116, 0.4);
+}
+
+.htb-hero-video-container video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.htb-hero-logo-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: #FFFFFF;
+    text-shadow:
+        0 2px 10px rgba(0, 0, 0, 0.5),
+        0 0 30px rgba(212, 165, 116, 0.5);
+    letter-spacing: 0.1em;
+}
+
+/* Main Headline */
+.htb-hero-title {
+    font-size: 3.5rem;
+    font-weight: 800;
+    line-height: 1.1;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.htb-hero-title-main {
+    color: #FFFFFF;
+    text-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
+}
+
+.htb-hero-title-accent {
+    color: #D4A574;
+    font-weight: 700;
+    font-size: 0.85em;
+    text-shadow: 0 0 30px rgba(212, 165, 116, 0.4);
+}
+
+/* Tagline */
+.htb-hero-tagline {
+    font-size: 1.25rem;
+    color: rgba(255, 255, 255, 0.8);
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    margin: 0;
+}
+
+.htb-hero-divider {
+    display: inline-block;
+    margin: 0 0.75rem;
+    color: #52B788;
+    font-weight: 300;
+}
+
+/* Description */
+.htb-hero-description {
+    font-size: 1.125rem;
+    color: rgba(255, 255, 255, 0.7);
+    line-height: 1.7;
+    max-width: 600px;
+    margin: 0;
+}
+
+/* CTA Buttons */
+.htb-hero-buttons {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.htb-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem 2rem;
+    font-size: 1rem;
+    font-weight: 600;
+    text-decoration: none;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    border: none;
+}
+
+.htb-btn svg {
+    width: 20px;
+    height: 20px;
+}
+
+.htb-btn-primary {
+    background: linear-gradient(135deg, #52B788 0%, #40916C 100%);
+    color: #FFFFFF;
+    box-shadow:
+        0 4px 15px rgba(82, 183, 136, 0.3),
+        0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.htb-btn-primary:hover {
+    transform: translateY(-3px);
+    box-shadow:
+        0 8px 25px rgba(82, 183, 136, 0.4),
+        0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.htb-btn-secondary {
+    background: rgba(255, 255, 255, 0.1);
+    color: #FFFFFF;
+    border: 2px solid rgba(212, 165, 116, 0.5);
+    backdrop-filter: blur(10px);
+}
+
+.htb-btn-secondary:hover {
+    background: rgba(212, 165, 116, 0.2);
+    border-color: #D4A574;
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(212, 165, 116, 0.2);
+}
+
+/* Trust Badges */
+.htb-hero-badges {
+    display: flex;
+    gap: 1.5rem;
+    margin-top: 2rem;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.htb-trust-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 100px;
+    backdrop-filter: blur(10px);
+}
+
+.htb-trust-badge svg {
+    color: #52B788;
+    flex-shrink: 0;
+}
+
+.htb-trust-badge span {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.875rem;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .htb-hero-section {
+        min-height: auto;
+        padding: 2rem 0;
+    }
+
+    .htb-hero-modern {
+        padding: 2rem 1rem;
+    }
+
+    .htb-hero-video-container {
+        width: 140px;
+        height: 140px;
+    }
+
+    .htb-hero-logo-text {
+        font-size: 2rem;
+    }
+
+    .htb-hero-title {
+        font-size: 2.25rem;
+    }
+
+    .htb-hero-tagline {
+        font-size: 1rem;
+        flex-direction: column;
+        display: flex;
+        gap: 0.25rem;
+    }
+
+    .htb-hero-divider {
+        display: none;
+    }
+
+    .htb-hero-description {
+        font-size: 1rem;
+    }
+
+    .htb-hero-buttons {
+        flex-direction: column;
+        width: 100%;
+        max-width: 300px;
+    }
+
+    .htb-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .htb-hero-badges {
+        gap: 0.75rem;
+    }
+
+    .htb-trust-badge {
+        padding: 0.375rem 0.75rem;
+    }
+
+    .htb-trust-badge span {
+        font-size: 0.75rem;
+    }
 }
 
 /* Navigation */
@@ -92,12 +366,8 @@
     animation: fadeIn 0.6s ease-out;
 }
 
-/* Responsive Design */
+/* Responsive Design - General */
 @media (max-width: 768px) {
-    .htb-hero-section h1 {
-        font-size: 2.5rem !important;
-    }
-
     .wp-block-columns {
         flex-direction: column;
     }
