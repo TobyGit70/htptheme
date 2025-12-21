@@ -3,6 +3,127 @@
  * Happy Turtle FSE Theme Functions
  */
 
+// ============================================================================
+// GITHUB THEME UPDATER
+// ============================================================================
+
+class HTP_Theme_Updater {
+    private $github_repo = 'TobyGit70/htptheme';
+    private $theme_slug = 'happyturtle-fse';
+    private $github_api_url;
+    private $transient_key = 'htp_theme_update_check';
+
+    public function __construct() {
+        $this->github_api_url = 'https://api.github.com/repos/' . $this->github_repo . '/releases/latest';
+
+        add_filter('pre_set_site_transient_update_themes', array($this, 'check_for_update'));
+        add_filter('themes_api', array($this, 'theme_info'), 20, 3);
+        add_filter('upgrader_source_selection', array($this, 'fix_folder_name'), 10, 4);
+    }
+
+    public function check_for_update($transient) {
+        if (empty($transient->checked)) {
+            return $transient;
+        }
+
+        $remote_version = $this->get_remote_version();
+        $current_version = wp_get_theme($this->theme_slug)->get('Version');
+
+        if ($remote_version && version_compare($remote_version, $current_version, '>')) {
+            $transient->response[$this->theme_slug] = array(
+                'theme' => $this->theme_slug,
+                'new_version' => $remote_version,
+                'url' => 'https://github.com/' . $this->github_repo,
+                'package' => $this->get_download_url(),
+            );
+        }
+
+        return $transient;
+    }
+
+    private function get_remote_version() {
+        $cached = get_transient($this->transient_key);
+        if ($cached !== false) {
+            return $cached;
+        }
+
+        $response = wp_remote_get($this->github_api_url, array(
+            'headers' => array('Accept' => 'application/vnd.github.v3+json'),
+            'timeout' => 10,
+        ));
+
+        if (is_wp_error($response) || wp_remote_retrieve_response_code($response) !== 200) {
+            return false;
+        }
+
+        $release = json_decode(wp_remote_retrieve_body($response), true);
+        $version = isset($release['tag_name']) ? ltrim($release['tag_name'], 'v') : false;
+
+        if ($version) {
+            set_transient($this->transient_key, $version, 6 * HOUR_IN_SECONDS);
+        }
+
+        return $version;
+    }
+
+    private function get_download_url() {
+        $response = wp_remote_get($this->github_api_url, array(
+            'headers' => array('Accept' => 'application/vnd.github.v3+json'),
+            'timeout' => 10,
+        ));
+
+        if (is_wp_error($response) || wp_remote_retrieve_response_code($response) !== 200) {
+            return false;
+        }
+
+        $release = json_decode(wp_remote_retrieve_body($response), true);
+        return isset($release['zipball_url']) ? $release['zipball_url'] : false;
+    }
+
+    public function theme_info($result, $action, $args) {
+        if ($action !== 'theme_information' || !isset($args->slug) || $args->slug !== $this->theme_slug) {
+            return $result;
+        }
+
+        $remote_version = $this->get_remote_version();
+        $theme = wp_get_theme($this->theme_slug);
+
+        return (object) array(
+            'name' => $theme->get('Name'),
+            'slug' => $this->theme_slug,
+            'version' => $remote_version,
+            'author' => $theme->get('Author'),
+            'homepage' => 'https://github.com/' . $this->github_repo,
+            'sections' => array(
+                'description' => $theme->get('Description'),
+                'changelog' => 'See GitHub releases for changelog.',
+            ),
+            'download_link' => $this->get_download_url(),
+        );
+    }
+
+    public function fix_folder_name($source, $remote_source, $upgrader, $hook_extra) {
+        if (!isset($hook_extra['theme']) || $hook_extra['theme'] !== $this->theme_slug) {
+            return $source;
+        }
+
+        $correct_folder = trailingslashit($remote_source) . $this->theme_slug;
+
+        if ($source !== $correct_folder) {
+            rename($source, $correct_folder);
+            return $correct_folder;
+        }
+
+        return $source;
+    }
+}
+
+new HTP_Theme_Updater();
+
+// ============================================================================
+// THEME SETUP
+// ============================================================================
+
 // Add theme support
 function happyturtle_fse_setup() {
     // Add support for block styles
