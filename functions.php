@@ -1,7 +1,17 @@
 <?php
 /**
  * Happy Turtle FSE Theme Functions
+ * Cleaned up version - B2B functionality moved to B2B Suite plugin
  */
+
+// ============================================================================
+// HIDE OBJECT CACHE PRO UPSELL NOTICE
+// ============================================================================
+add_action('admin_init', function() {
+    if (get_user_meta(get_current_user_id(), 'roc_dismissed_pro_release_notice', true) != 1) {
+        update_user_meta(get_current_user_id(), 'roc_dismissed_pro_release_notice', 1);
+    }
+});
 
 // ============================================================================
 // GITHUB THEME UPDATER
@@ -159,6 +169,14 @@ add_action('after_setup_theme', 'happyturtle_fse_setup');
 
 // Enqueue styles and scripts
 function happyturtle_fse_styles() {
+    // Google Fonts - Inter (body) and Montserrat (headings)
+    wp_enqueue_style(
+        'happyturtle-google-fonts',
+        'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Montserrat:wght@400;500;600;700;800&display=swap',
+        array(),
+        null
+    );
+
     // Main theme style
     wp_enqueue_style(
         'happyturtle-fse-style',
@@ -409,1367 +427,630 @@ function happyturtle_login_logo_url_title() {
 }
 add_filter('login_headertext', 'happyturtle_login_logo_url_title');
 
+// Add "Authorized Personnel Only" notice to WP admin login page
+function happyturtle_login_message($message) {
+    $notice = '<div style="background: linear-gradient(135deg, #dc2626, #b91c1c); color: #fff; padding: 12px 20px; border-radius: 8px; margin-bottom: 20px; text-align: center; font-weight: 600; font-size: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.15);">
+        <span style="margin-right: 8px;">&#9888;</span> AUTHORIZED PERSONNEL ONLY
+    </div>';
+    return $notice . $message;
+}
+add_filter('login_message', 'happyturtle_login_message');
 
-// ========================================
-// B2B PARTNER SYSTEM
-// ========================================
-
-// B2B system now handled by B2B Suite plugin
-// Legacy theme files have been moved to plugin
-// If you need to revert, restore the .theme-backup files in inc/ folder
-
-// Load WooCommerce integration if WooCommerce is active
-if (class_exists('WooCommerce')) {
-    $woo_sync_file = get_template_directory() . '/inc/class-woocommerce-sync.php';
-    if (file_exists($woo_sync_file)) {
-        require_once $woo_sync_file;
+// Add "Authorized Partners Only" notice to WooCommerce My Account login
+function happyturtle_partner_login_notice() {
+    if (!is_user_logged_in()) {
+        echo '<div style="background: linear-gradient(135deg, #1B4332, #2D6A4F); color: #fff; padding: 12px 20px; border-radius: 8px; margin-bottom: 20px; text-align: center; font-weight: 600; font-size: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); width: 100%; max-width: 400px;">
+            <span style="margin-right: 8px;">&#128274;</span> AUTHORIZED PARTNERS ONLY
+        </div>';
     }
 }
+add_action('woocommerce_before_customer_login_form', 'happyturtle_partner_login_notice');
 
-// Initialize B2B system
-function happyturtle_init_b2b_system() {
-    // Initialize security logger (must be first)
-    $security_logger = HappyTurtle_Security_Logger::get_instance();
-    $security_logger->create_tables();
+// ============================================================================
+// AR LICENSE NUMBER LOGIN
+// ============================================================================
+// Allow partners to log in with their AR license number (stored in user meta)
 
-    // Initialize product catalog
-    $product_catalog = new HappyTurtle_Product_Catalog();
-    $product_catalog->create_tables();
-    $product_catalog->insert_default_categories();
-
-    // Initialize partner management
-    $partner_manager = new HappyTurtle_Partner_Management();
-    $partner_manager->create_tables();
-
-    // Initialize REST API
-    $rest_api = new HappyTurtle_REST_API();
-    $rest_api->register_routes();
-}
-add_action('rest_api_init', 'happyturtle_init_b2b_system');
-
-// Create database tables on theme activation
-function happyturtle_activate() {
-    $security_logger = HappyTurtle_Security_Logger::get_instance();
-    $security_logger->create_tables();
-
-    $product_catalog = new HappyTurtle_Product_Catalog();
-    $product_catalog->create_tables();
-    $product_catalog->insert_default_categories();
-
-    $partner_manager = new HappyTurtle_Partner_Management();
-    $partner_manager->create_tables();
-}
-add_action('after_switch_theme', 'happyturtle_activate');
-
-// Add body class for logged-in status
-function happyturtle_body_class($classes) {
-    if (is_user_logged_in()) {
-        $classes[] = 'user-logged-in';
-    } else {
-        $classes[] = 'user-not-logged-in';
+function happyturtle_allow_license_login($user, $username, $password) {
+    // If already authenticated or empty username, skip
+    if ($user instanceof WP_User || empty($username)) {
+        return $user;
     }
-    return $classes;
-}
-add_filter('body_class', 'happyturtle_body_class');
 
-// Redirect WooCommerce My Account page to Partner Login
-function happyturtle_redirect_my_account() {
-    // Only redirect if not logged in and not an admin
-    if (!is_user_logged_in() && is_page('my-account') && !current_user_can('administrator')) {
-        wp_redirect(home_url('/partner-login/'));
-        exit;
+    // Check if username looks like an AR license number (just digits)
+    if (preg_match('/^\d{1,6}$/', $username)) {
+        // Try to find user by ar_disp_XXX username format
+        $found_user = get_user_by('login', 'ar_disp_' . $username);
+
+        if ($found_user) {
+            // Verify password
+            if (wp_check_password($password, $found_user->user_pass, $found_user->ID)) {
+                return $found_user;
+            } else {
+                return new WP_Error('incorrect_password', __('The password you entered is incorrect.'));
+            }
+        }
+
+        // Also check user meta ar_license_number
+        $users = get_users([
+            'meta_key' => 'ar_license_number',
+            'meta_value' => $username,
+            'number' => 1,
+        ]);
+
+        if (!empty($users)) {
+            $found_user = $users[0];
+            if (wp_check_password($password, $found_user->user_pass, $found_user->ID)) {
+                return $found_user;
+            } else {
+                return new WP_Error('incorrect_password', __('The password you entered is incorrect.'));
+            }
+        }
+
+        // Also check partner table if B2B Suite is active
+        global $wpdb;
+        $table_exists = $wpdb->get_var("SHOW TABLES LIKE '{$wpdb->prefix}b2b_partners'");
+        if ($table_exists) {
+            $partner = $wpdb->get_row($wpdb->prepare(
+                "SELECT wp_user_id FROM {$wpdb->prefix}b2b_partners WHERE license_number = %s OR license_number = %s",
+                $username,
+                'D' . str_pad($username, 5, '0', STR_PAD_LEFT)
+            ));
+
+            if ($partner && $partner->wp_user_id) {
+                $found_user = get_user_by('id', $partner->wp_user_id);
+                if ($found_user && wp_check_password($password, $found_user->user_pass, $found_user->ID)) {
+                    return $found_user;
+                }
+            }
+        }
     }
-}
-add_action('template_redirect', 'happyturtle_redirect_my_account');
 
-/**
- * SEO: Custom meta title and description for homepage
- */
-function happyturtle_custom_seo_meta() {
-    if (is_front_page() || is_home()) {
+    return $user;
+}
+add_filter('authenticate', 'happyturtle_allow_license_login', 20, 3);
+
+// Block subscribers from logging in - must be verified partner first
+function happyturtle_block_subscriber_login($user, $username, $password) {
+    if ($user instanceof WP_User) {
+        // Check if user is only a subscriber (not verified)
+        if (in_array('subscriber', $user->roles) && !in_array('partner', $user->roles) && !in_array('administrator', $user->roles)) {
+            return new WP_Error(
+                'account_pending',
+                __('Your account is pending verification. You will receive an email with login credentials once approved.')
+            );
+        }
+    }
+    return $user;
+}
+add_filter('authenticate', 'happyturtle_block_subscriber_login', 30, 3);
+
+// Update login form with help text
+function happyturtle_login_label_change() {
+    if (function_exists('is_account_page') && is_account_page() && !is_user_logged_in()) {
         ?>
-        <meta name="description" content="Happy Turtle Processing | Arkansas Cannabis Processor | Premium concentrates and CBD products for dispensaries statewide. Licensed, compliant, and trusted by Arkansas's medical marijuana industry.">
-        <title>Happy Turtle Processing | Arkansas Cannabis Processor | Premium Concentrates & CBD</title>
+        <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Update username label
+            var label = document.querySelector('label[for="username"]');
+            if (label) {
+                label.innerHTML = 'AR Dispensary License # <span class="required" aria-hidden="true">*</span>';
+            }
+
+            // Update placeholder
+            var input = document.querySelector('#username');
+            if (input) {
+                input.placeholder = 'Enter your license number (e.g., 309)';
+            }
+
+            // Add help text below the form
+            var form = document.querySelector('.woocommerce-form-login');
+            if (form && !document.querySelector('.htp-login-help')) {
+                var helpDiv = document.createElement('div');
+                helpDiv.className = 'htp-login-help';
+                helpDiv.style.cssText = 'margin-top: 20px; padding: 15px; background: #f0f9f4; border-radius: 8px; font-size: 13px; color: #1B4332; border: 1px solid #d4edda;';
+                helpDiv.innerHTML = '<strong>Login Help:</strong><br>Enter your Arkansas Dispensary License Number (the number only, e.g., <strong>309</strong>) and the password sent to you by Happy Turtle Processing.<br><br><em>Not yet a partner? <a href="/partner-application" style="color:#2D6A4F;font-weight:600;">Apply here</a></em>';
+                form.appendChild(helpDiv);
+            }
+        });
+        </script>
         <?php
     }
 }
-add_action('wp_head', 'happyturtle_custom_seo_meta', 1);
+add_action('wp_footer', 'happyturtle_login_label_change');
 
-/**
- * Add favicon to site
- */
-function happyturtle_favicon() {
-    $favicon_svg = get_template_directory_uri() . '/assets/images/favicon.svg';
-    $logo_svg = get_template_directory_uri() . '/assets/images/htp-logo.svg';
+// Style the WooCommerce My Account login form and button
+function happyturtle_myaccount_login_styles() {
+    if (function_exists('is_account_page') && is_account_page() && !is_user_logged_in()) {
+        ?>
+        <style>
+            /* Center entire login section on page */
+            .woocommerce {
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                min-height: 60vh;
+                max-width: 400px !important;
+                margin: 0 auto !important;
+                padding: 40px 20px;
+            }
+
+            /* Hide the Login title */
+            .woocommerce-form-login > h2,
+            .woocommerce > h2,
+            .u-column1 > h2 {
+                display: none !important;
+            }
+
+            /* Style error/notice messages */
+            .woocommerce-error,
+            .woocommerce-message,
+            .woocommerce-info {
+                width: 100%;
+                max-width: 400px;
+                margin-bottom: 20px !important;
+                border-radius: 8px;
+            }
+
+            /* My Account Login Page Styling */
+            .woocommerce-form-login {
+                max-width: 400px;
+                width: 100%;
+                padding: 30px;
+                background: #fff;
+                border-radius: 12px;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            }
+
+            .woocommerce-form-login .form-row input {
+                width: 100%;
+                padding: 12px 16px;
+                border: 2px solid #e5e7eb;
+                border-radius: 8px;
+                font-size: 16px;
+                transition: border-color 0.3s ease;
+            }
+
+            .woocommerce-form-login .form-row input:focus {
+                border-color: #2D6A4F;
+                outline: none;
+                box-shadow: 0 0 0 3px rgba(45, 106, 79, 0.1);
+            }
+
+            .woocommerce-form-login .woocommerce-form-login__submit,
+            .woocommerce-form-login button[type="submit"] {
+                width: 100%;
+                padding: 16px 24px;
+                background: linear-gradient(135deg, #1B4332, #2D6A4F) !important;
+                color: #fff !important;
+                border: none !important;
+                border-radius: 8px;
+                font-size: 18px;
+                font-weight: 700;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                box-shadow: 0 4px 12px rgba(27, 67, 50, 0.3);
+                margin-top: 16px;
+            }
+
+            .woocommerce-form-login .woocommerce-form-login__submit:hover,
+            .woocommerce-form-login button[type="submit"]:hover {
+                background: linear-gradient(135deg, #0F2419, #1B4332) !important;
+                transform: translateY(-2px);
+                box-shadow: 0 6px 20px rgba(27, 67, 50, 0.4);
+            }
+
+            .woocommerce-LostPassword {
+                text-align: center;
+                margin-top: 16px;
+            }
+
+            .woocommerce-LostPassword a {
+                color: #2D6A4F;
+                text-decoration: none;
+            }
+
+            .woocommerce-LostPassword a:hover {
+                text-decoration: underline;
+            }
+        </style>
+        <?php
+    }
+}
+add_action('wp_head', 'happyturtle_myaccount_login_styles');
+
+// ============================================================================
+// CUSTOM FAVICON (SVG ATOM)
+// ============================================================================
+
+function happyturtle_custom_favicon() {
+    // Remove default site icon
+    remove_action('wp_head', 'wp_site_icon', 99);
+
+    $favicon_url = get_template_directory_uri() . '/assets/images/favicon.svg';
     ?>
-    <link rel="icon" type="image/svg+xml" href="<?php echo esc_url($favicon_svg); ?>">
-    <link rel="apple-touch-icon" href="<?php echo esc_url($logo_svg); ?>">
-    <meta name="theme-color" content="#1B4332">
+    <link rel="icon" href="<?php echo esc_url($favicon_url); ?>" type="image/svg+xml">
+    <link rel="icon" href="<?php echo esc_url($favicon_url); ?>" sizes="any" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="<?php echo esc_url($favicon_url); ?>">
     <?php
 }
-add_action('wp_head', 'happyturtle_favicon', 2);
+add_action('wp_head', 'happyturtle_custom_favicon', 1);
 
-/**
- * Filter document title for SEO
- */
-function happyturtle_custom_document_title($title) {
-    if (is_front_page() || is_home()) {
-        return 'Happy Turtle Processing | Arkansas Cannabis Processor | Premium Concentrates & CBD';
-    }
-    return $title;
+// Also add to login page
+function happyturtle_login_favicon() {
+    $favicon_url = get_template_directory_uri() . '/assets/images/favicon.svg';
+    ?>
+    <link rel="icon" href="<?php echo esc_url($favicon_url); ?>" type="image/svg+xml">
+    <?php
 }
-add_filter('document_title_parts', function($title) {
-    if (is_front_page() || is_home()) {
-        return ['title' => 'Happy Turtle Processing | Arkansas Cannabis Processor | Premium Concentrates & CBD'];
-    }
-    return $title;
-});
+add_action('login_head', 'happyturtle_login_favicon', 1);
+
+
 
 
 // ============================================================================
-// B2B PRODUCT CATALOG FUNCTIONALITY
+// HIDE CART/ACCOUNT ICONS UNTIL LOGGED IN
 // ============================================================================
+// Partners log in via the atom icon in the footer
 
-/**
- * Enqueue product catalog scripts and styles
- */
-function happyturtle_product_catalog_scripts() {
-    // Only load on product archive pages
-    if (is_post_type_archive('htb_product') || is_tax('product_category')) {
-        // Product catalog JavaScript
-        wp_enqueue_script(
-            'happyturtle-product-catalog',
-            get_template_directory_uri() . '/assets/js/product-catalog.js',
-            array(),
-            '1.0.0',
-            true
-        );
-
-        // Localize script for AJAX and user data
-        wp_localize_script('happyturtle-product-catalog', 'htbCatalog', array(
-            'ajaxUrl' => admin_url('admin-ajax.php'),
-            'nonce' => wp_create_nonce('htb_catalog_nonce'),
-            'isLoggedIn' => is_user_logged_in(),
-            'loginUrl' => site_url('/partner-login')
-        ));
-    }
-}
-add_action('wp_enqueue_scripts', 'happyturtle_product_catalog_scripts', 20);
-
-/**
- * Modify product query for filters, search, and sorting
- */
-function happyturtle_product_query_filters($query) {
-    // Only modify main query on product archives
-    if (!is_admin() && $query->is_main_query() && (is_post_type_archive('htb_product') || is_tax('product_category'))) {
-
-        // Search filter
-        if (isset($_GET['product_search']) && !empty($_GET['product_search'])) {
-            $search_term = sanitize_text_field($_GET['product_search']);
-
-            // Search in title and SKU
-            $meta_query = array(
-                'relation' => 'OR',
-                array(
-                    'key' => '_sku',
-                    'value' => $search_term,
-                    'compare' => 'LIKE'
-                )
-            );
-
-            $query->set('s', $search_term);
-            $query->set('meta_query', $meta_query);
-        }
-
-        // Price range filter
-        if ((isset($_GET['price_min']) && !empty($_GET['price_min'])) ||
-            (isset($_GET['price_max']) && !empty($_GET['price_max']))) {
-
-            $price_meta_query = array(
-                'key' => '_wholesale_price',
-                'type' => 'NUMERIC'
-            );
-
-            if (isset($_GET['price_min']) && !empty($_GET['price_min'])) {
-                $price_meta_query['value'] = array();
-                $price_meta_query['compare'] = 'BETWEEN';
-                $price_meta_query['value'][] = floatval($_GET['price_min']);
-
-                if (isset($_GET['price_max']) && !empty($_GET['price_max'])) {
-                    $price_meta_query['value'][] = floatval($_GET['price_max']);
-                } else {
-                    $price_meta_query['value'][] = 999999; // Max ceiling
-                }
-            } elseif (isset($_GET['price_max']) && !empty($_GET['price_max'])) {
-                $price_meta_query['value'] = floatval($_GET['price_max']);
-                $price_meta_query['compare'] = '<=';
+function happyturtle_hide_cart_account_icons() {
+    // Hide cart/account for non-logged-in users
+    if (!is_user_logged_in()) {
+        echo '<style>
+            .wp-block-woocommerce-customer-account,
+            .wc-block-mini-cart,
+            .wp-block-woocommerce-mini-cart,
+            .logged-in-only {
+                display: none !important;
             }
+        </style>';
+    }
+}
+add_action('wp_head', 'happyturtle_hide_cart_account_icons');
 
-            $existing_meta_query = $query->get('meta_query') ?: array();
-            $existing_meta_query[] = $price_meta_query;
-            $query->set('meta_query', $existing_meta_query);
+// ============================================================================
+// ACCOUNT ICON HOVER DROPDOWN
+// ============================================================================
+
+function happyturtle_account_dropdown() {
+    if (!is_user_logged_in()) return;
+
+    $account_url = wc_get_page_permalink('myaccount');
+    ?>
+    <style>
+        .wp-block-woocommerce-customer-account {
+            position: relative !important;
+            z-index: 999999 !important;
+        }
+        .htp-account-dropdown {
+            position: absolute !important;
+            top: 100% !important;
+            right: 0 !important;
+            background: #fff !important;
+            border-radius: 8px !important;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.25) !important;
+            min-width: 180px !important;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(10px);
+            transition: all 0.2s ease;
+            z-index: 9999999 !important;
+            padding: 8px 0 !important;
+            margin-top: 8px !important;
+            overflow: visible !important;
+        }
+        .wp-block-woocommerce-customer-account:hover .htp-account-dropdown,
+        .htp-account-dropdown:hover {
+            opacity: 1 !important;
+            visibility: visible !important;
+            transform: translateY(0) !important;
+        }
+        /* Fix parent containers that might clip */
+        .site-header,
+        .site-header .wp-block-group,
+        .wp-block-navigation,
+        header,
+        .wp-block-group.site-header {
+            overflow: visible !important;
+        }
+        .htp-account-dropdown a {
+            display: block !important;
+            padding: 12px 18px !important;
+            color: #1a1a1a !important;
+            text-decoration: none !important;
+            font-size: 14px !important;
+            font-weight: 500 !important;
+            transition: background 0.2s !important;
+            background: #fff !important;
+        }
+        .htp-account-dropdown a:hover {
+            background: #f5f5f5 !important;
+            color: #2D6A4F !important;
+        }
+        .htp-account-dropdown a.logout-link {
+            border-top: 1px solid #eee !important;
+            margin-top: 4px !important;
+            padding-top: 14px !important;
+            color: #dc2626 !important;
+        }
+        .htp-account-dropdown a.logout-link:hover {
+            background: #fef2f2 !important;
+            color: #b91c1c !important;
+        }
+    </style>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var accountIcon = document.querySelector('.wp-block-woocommerce-customer-account');
+        if (!accountIcon || accountIcon.querySelector('.htp-account-dropdown')) return;
+
+        var dropdown = document.createElement('div');
+        dropdown.className = 'htp-account-dropdown';
+        dropdown.innerHTML = '<a href="<?php echo esc_url($account_url . 'orders/'); ?>">Orders</a>' +
+                            '<a href="<?php echo esc_url($account_url . 'edit-account/'); ?>">Account details</a>' +
+                            '<a href="<?php echo esc_url(wp_logout_url(home_url())); ?>" class="logout-link">Log out</a>';
+        accountIcon.appendChild(dropdown);
+    });
+    </script>
+    <?php
+}
+add_action('wp_footer', 'happyturtle_account_dropdown');
+
+// ============================================================================
+// HIDE PAGE TITLES GLOBALLY
+// ============================================================================
+
+function happyturtle_hide_page_titles() {
+    echo '<style>
+        /* Hide page titles globally - but NOT on single product pages */
+        .entry-title,
+        .page-title,
+        .wp-block-post-title,
+        h1.entry-title,
+        h1.page-title,
+        .woocommerce-products-header__title,
+        article.page .entry-header,
+        .page .wp-block-post-title,
+        .archive-title,
+        .woocommerce-products-header h1,
+        .woocommerce-page h1.page-title,
+        .woocommerce h1.page-title,
+        header.woocommerce-products-header,
+        .term-description,
+        body.post-type-archive-product h1,
+        .wp-block-query-title {
+            display: none !important;
         }
 
-        // In stock filter
-        if (isset($_GET['in_stock']) && $_GET['in_stock'] == '1') {
-            $stock_meta_query = array(
-                'key' => '_stock_quantity',
-                'value' => 0,
-                'type' => 'NUMERIC',
-                'compare' => '>'
-            );
-
-            $existing_meta_query = $query->get('meta_query') ?: array();
-            $existing_meta_query[] = $stock_meta_query;
-            $query->set('meta_query', $existing_meta_query);
+        /* Show product title on single product pages */
+        .single-product h1.product_title,
+        .single-product .product_title,
+        body.single-product h1.product_title {
+            display: block !important;
+            visibility: visible !important;
         }
-
-        // Category filter (multiple)
-        if (isset($_GET['category']) && !empty($_GET['category'])) {
-            $categories = explode(',', sanitize_text_field($_GET['category']));
-            $query->set('tax_query', array(
-                array(
-                    'taxonomy' => 'product_category',
-                    'field' => 'slug',
-                    'terms' => $categories,
-                    'operator' => 'IN'
-                )
-            ));
-        }
-
-        // Sorting
-        if (isset($_GET['sort']) && !empty($_GET['sort'])) {
-            switch ($_GET['sort']) {
-                case 'price_asc':
-                    $query->set('meta_key', '_wholesale_price');
-                    $query->set('orderby', 'meta_value_num');
-                    $query->set('order', 'ASC');
-                    break;
-
-                case 'price_desc':
-                    $query->set('meta_key', '_wholesale_price');
-                    $query->set('orderby', 'meta_value_num');
-                    $query->set('order', 'DESC');
-                    break;
-
-                case 'name_asc':
-                    $query->set('orderby', 'title');
-                    $query->set('order', 'ASC');
-                    break;
-
-                case 'name_desc':
-                    $query->set('orderby', 'title');
-                    $query->set('order', 'DESC');
-                    break;
-
-                case 'stock_desc':
-                    $query->set('meta_key', '_stock_quantity');
-                    $query->set('orderby', 'meta_value_num');
-                    $query->set('order', 'DESC');
-                    break;
-
-                default:
-                    // Default sorting (date)
-                    $query->set('orderby', 'date');
-                    $query->set('order', 'DESC');
-            }
-        }
-
-        // Set posts per page
-        $query->set('posts_per_page', 12);
-    }
+    </style>';
 }
-add_action('pre_get_posts', 'happyturtle_product_query_filters');
+add_action('wp_head', 'happyturtle_hide_page_titles');
 
-/**
- * AJAX handler for toggling favorites
- */
-function happyturtle_toggle_favorite() {
-    // Verify nonce
-    check_ajax_referer('htb_catalog_nonce', 'nonce');
+// ============================================================================
+// WOOCOMMERCE SHOP STYLES - Now handled by B2B Suite plugin
+// ============================================================================
+// Shop and product page styles are in:
+// plugins/b2b-suite/includes/class-wc-shop-filters.php
 
-    // Check if user is logged in
-    if (!is_user_logged_in()) {
-        wp_send_json_error(array('message' => 'You must be logged in'));
-        return;
-    }
+// ============================================================================
+// WOOCOMMERCE ATOM PLACEHOLDER IMAGE
+// ============================================================================
 
-    $product_id = isset($_POST['product_id']) ? intval($_POST['product_id']) : 0;
-    $user_id = get_current_user_id();
+// Override the entire placeholder HTML to use inline SVG
+function happyturtle_wc_placeholder_img($html, $size, $dimensions) {
+    // Determine size based on context
+    $width = is_product() ? 400 : 150;
+    $height = is_product() ? 400 : 150;
 
-    if (!$product_id) {
-        wp_send_json_error(array('message' => 'Invalid product ID'));
-        return;
-    }
+    // Atom SVG with green background
+    $svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="' . $width . '" height="' . $height . '" style="background: linear-gradient(135deg, #1B4332, #2D6A4F); padding: 30px; border-radius: 8px; display: block; margin: 0 auto;">
+      <defs>
+        <radialGradient id="nucleusGlow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" style="stop-color:#FFFFFF"/>
+          <stop offset="40%" style="stop-color:#FFE4B5"/>
+          <stop offset="70%" style="stop-color:#FFA500"/>
+          <stop offset="100%" style="stop-color:#FF8C00"/>
+        </radialGradient>
+        <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="1" result="blur"/>
+          <feMerge>
+            <feMergeNode in="blur"/>
+            <feMergeNode in="SourceGraphic"/>
+          </feMerge>
+        </filter>
+      </defs>
+      <g fill="none" stroke-width="1.5" filter="url(#glow)">
+        <ellipse cx="16" cy="16" rx="14" ry="5" stroke="#FF8C00" opacity="0.9" transform="rotate(-35 16 16)"/>
+        <ellipse cx="16" cy="16" rx="14" ry="5" stroke="#FFA500" opacity="0.85" transform="rotate(35 16 16)"/>
+        <ellipse cx="16" cy="16" rx="5" ry="14" stroke="#FFD700" opacity="0.8"/>
+      </g>
+      <circle cx="16" cy="16" r="5" fill="url(#nucleusGlow)" filter="url(#glow)"/>
+      <circle cx="16" cy="16" r="2.5" fill="#FFFFFF" opacity="0.95"/>
+      <circle cx="14.5" cy="14.5" r="1" fill="white" opacity="0.6"/>
+    </svg>';
 
-    global $wpdb;
-    $favorites_table = $wpdb->prefix . '1_happyturtle_product_favorites';
-
-    // Check if already favorited
-    $existing = $wpdb->get_var($wpdb->prepare(
-        "SELECT id FROM $favorites_table WHERE user_id = %d AND product_id = %d",
-        $user_id,
-        $product_id
-    ));
-
-    if ($existing) {
-        // Remove from favorites
-        $wpdb->delete(
-            $favorites_table,
-            array(
-                'user_id' => $user_id,
-                'product_id' => $product_id
-            ),
-            array('%d', '%d')
-        );
-
-        wp_send_json_success(array(
-            'action' => 'removed',
-            'message' => 'Removed from favorites'
-        ));
-    } else {
-        // Add to favorites
-        $wpdb->insert(
-            $favorites_table,
-            array(
-                'user_id' => $user_id,
-                'product_id' => $product_id,
-                'created_at' => current_time('mysql')
-            ),
-            array('%d', '%d', '%s')
-        );
-
-        wp_send_json_success(array(
-            'action' => 'added',
-            'message' => 'Added to favorites'
-        ));
-    }
+    return $svg;
 }
-add_action('wp_ajax_htb_toggle_favorite', 'happyturtle_toggle_favorite');
-add_action('wp_ajax_nopriv_htb_toggle_favorite', 'happyturtle_toggle_favorite');
-
-// ============================================================
-// PRODUCT DETAIL PAGE FUNCTIONS
-// ============================================================
-
-/**
- * Enqueue product detail page scripts
- */
-function happyturtle_product_detail_scripts() {
-    if (is_singular('htb_product')) {
-        wp_enqueue_script(
-            'happyturtle-product-detail',
-            get_template_directory_uri() . '/assets/js/product-detail.js',
-            array(),
-            '1.0.0',
-            true
-        );
-
-        wp_localize_script('happyturtle-product-detail', 'htbProductDetail', array(
-            'ajaxUrl' => admin_url('admin-ajax.php'),
-            'nonce' => wp_create_nonce('htb_product_detail_nonce'),
-            'isLoggedIn' => is_user_logged_in(),
-            'loginUrl' => site_url('/partner-login')
-        ));
-    }
-}
-add_action('wp_enqueue_scripts', 'happyturtle_product_detail_scripts', 20);
-
-
-/**
- * AJAX handler for adding product to cart
- */
-function happyturtle_add_to_cart() {
-    check_ajax_referer('htb_product_detail_nonce', 'nonce');
-
-    if (!is_user_logged_in()) {
-        wp_send_json_error(array('message' => 'You must be logged in to add products to cart'));
-        return;
-    }
-
-    $product_id = isset($_POST['product_id']) ? intval($_POST['product_id']) : 0;
-    $quantity = isset($_POST['quantity']) ? intval($_POST['quantity']) : 1;
-    $user_id = get_current_user_id();
-
-    if (!$product_id || $quantity < 1) {
-        wp_send_json_error(array('message' => 'Invalid product or quantity'));
-        return;
-    }
-
-    // Verify product exists and is published
-    $product = get_post($product_id);
-    if (!$product || $product->post_type !== 'htb_product' || $product->post_status !== 'publish') {
-        wp_send_json_error(array('message' => 'Product not found'));
-        return;
-    }
-
-    // Check stock availability
-    $stock_quantity = get_post_meta($product_id, '_stock_quantity', true);
-    if ($stock_quantity !== '' && intval($stock_quantity) < $quantity) {
-        wp_send_json_error(array('message' => 'Insufficient stock available'));
-        return;
-    }
-
-    // Check minimum order quantity
-    $minimum_order = get_post_meta($product_id, '_minimum_order', true);
-    if ($minimum_order && $quantity < intval($minimum_order)) {
-        wp_send_json_error(array('message' => 'Quantity is below minimum order requirement'));
-        return;
-    }
-
-    // Get or create cart for user (stored in user meta for now, will move to sessions later)
-    $cart = get_user_meta($user_id, '_htb_cart', true);
-    if (!is_array($cart)) {
-        $cart = array();
-    }
-
-    // Add or update cart item
-    if (isset($cart[$product_id])) {
-        $cart[$product_id]['quantity'] += $quantity;
-    } else {
-        $cart[$product_id] = array(
-            'product_id' => $product_id,
-            'quantity' => $quantity,
-            'added_at' => current_time('mysql')
-        );
-    }
-
-    // Save cart
-    update_user_meta($user_id, '_htb_cart', $cart);
-
-    // Return success with cart count
-    $cart_count = array_sum(array_column($cart, 'quantity'));
-
-    wp_send_json_success(array(
-        'message' => 'Product added to cart',
-        'cart_count' => $cart_count
-    ));
-}
-add_action('wp_ajax_htb_add_to_cart', 'happyturtle_add_to_cart');
-
-
-/**
- * AJAX handler for notify when available
- */
-function happyturtle_notify_when_available() {
-    check_ajax_referer('htb_product_detail_nonce', 'nonce');
-
-    if (!is_user_logged_in()) {
-        wp_send_json_error(array('message' => 'You must be logged in'));
-        return;
-    }
-
-    $product_id = isset($_POST['product_id']) ? intval($_POST['product_id']) : 0;
-    $user_id = get_current_user_id();
-
-    if (!$product_id) {
-        wp_send_json_error(array('message' => 'Invalid product'));
-        return;
-    }
-
-    global $wpdb;
-    $table_name = $wpdb->prefix . '1_happyturtle_product_notifications';
-
-    // Check if notification already exists
-    $existing = $wpdb->get_var($wpdb->prepare(
-        "SELECT id FROM $table_name WHERE user_id = %d AND product_id = %d AND notified = 0",
-        $user_id,
-        $product_id
-    ));
-
-    if ($existing) {
-        wp_send_json_error(array('message' => 'You are already subscribed to notifications for this product'));
-        return;
-    }
-
-    // Insert notification request
-    $result = $wpdb->insert(
-        $table_name,
-        array(
-            'user_id' => $user_id,
-            'product_id' => $product_id,
-            'notified' => 0,
-            'created_at' => current_time('mysql')
-        ),
-        array('%d', '%d', '%d', '%s')
-    );
-
-    if ($result) {
-        wp_send_json_success(array('message' => 'You will be notified when this product is back in stock'));
-    } else {
-        wp_send_json_error(array('message' => 'Failed to save notification preference'));
-    }
-}
-add_action('wp_ajax_htb_notify_when_available', 'happyturtle_notify_when_available');
-
-
-/**
- * Create product notifications table
- */
-function happyturtle_create_product_notifications_table() {
-    global $wpdb;
-    $table_name = $wpdb->prefix . '1_happyturtle_product_notifications';
-    $charset_collate = $wpdb->get_charset_collate();
-
-    $sql = "CREATE TABLE IF NOT EXISTS $table_name (
-        id bigint(20) NOT NULL AUTO_INCREMENT,
-        user_id bigint(20) NOT NULL,
-        product_id bigint(20) NOT NULL,
-        notified tinyint(1) DEFAULT 0,
-        created_at datetime NOT NULL,
-        notified_at datetime DEFAULT NULL,
-        PRIMARY KEY  (id),
-        KEY user_id (user_id),
-        KEY product_id (product_id),
-        KEY notified (notified)
-    ) $charset_collate;";
-
-    require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
-    dbDelta($sql);
-}
-// Run on theme activation (add to functions.php main activation hook if needed)
-
-
-// ============================================================
-// SHOPPING CART FUNCTIONALITY
-// ============================================================
-
-/**
- * Enqueue cart scripts and styles
- */
-function happyturtle_cart_scripts() {
-    // Only load on cart page
-    if (is_page_template('page-cart.php')) {
-        wp_enqueue_script(
-            'happyturtle-cart',
-            get_template_directory_uri() . '/assets/js/cart.js',
-            array(),
-            '1.0.0',
-            true
-        );
-
-        wp_localize_script('happyturtle-cart', 'htbCart', array(
-            'ajaxUrl' => admin_url('admin-ajax.php'),
-            'nonce' => wp_create_nonce('htb_cart_nonce'),
-            'isLoggedIn' => is_user_logged_in(),
-            'loginUrl' => site_url('/partner-login')
-        ));
-    }
-}
-add_action('wp_enqueue_scripts', 'happyturtle_cart_scripts', 20);
-
-
-/**
- * AJAX: Update cart item quantity
- */
-function happyturtle_update_cart_quantity() {
-    check_ajax_referer('htb_cart_nonce', 'nonce');
-
-    if (!is_user_logged_in()) {
-        wp_send_json_error(array('message' => 'You must be logged in'));
-        return;
-    }
-
-    $product_id = isset($_POST['product_id']) ? intval($_POST['product_id']) : 0;
-    $quantity = isset($_POST['quantity']) ? intval($_POST['quantity']) : 1;
-    $user_id = get_current_user_id();
-
-    if (!$product_id || $quantity < 1) {
-        wp_send_json_error(array('message' => 'Invalid product or quantity'));
-        return;
-    }
-
-    // Check product exists
-    $product = get_post($product_id);
-    if (!$product || $product->post_type !== 'htb_product') {
-        wp_send_json_error(array('message' => 'Product not found'));
-        return;
-    }
-
-    // Check stock
-    $stock_quantity = get_post_meta($product_id, '_stock_quantity', true);
-    if ($stock_quantity !== '' && intval($stock_quantity) < $quantity) {
-        wp_send_json_error(array('message' => 'Insufficient stock available'));
-        return;
-    }
-
-    // Check minimum order
-    $minimum_order = get_post_meta($product_id, '_minimum_order', true);
-    if ($minimum_order && $quantity < intval($minimum_order)) {
-        wp_send_json_error(array('message' => 'Quantity is below minimum order requirement'));
-        return;
-    }
-
-    // Get cart
-    $cart = get_user_meta($user_id, '_htb_cart', true);
-    if (!is_array($cart)) {
-        $cart = array();
-    }
-
-    // Update quantity
-    if (isset($cart[$product_id])) {
-        $cart[$product_id]['quantity'] = $quantity;
-        update_user_meta($user_id, '_htb_cart', $cart);
-
-        // Calculate new totals
-        $totals = happyturtle_calculate_cart_totals($cart);
-
-        // Calculate line total for this item
-        $wholesale_price = get_post_meta($product_id, '_wholesale_price', true);
-        $tiered_pricing = get_post_meta($product_id, '_tiered_pricing', true);
-
-        $item_price = floatval($wholesale_price);
-        if ($tiered_pricing && is_array($tiered_pricing)) {
-            foreach (array_reverse($tiered_pricing) as $tier) {
-                if ($quantity >= intval($tier['min_qty'])) {
-                    $item_price = floatval($tier['price']);
-                    break;
-                }
-            }
-        }
-
-        $line_total = $item_price * $quantity;
-
-        wp_send_json_success(array(
-            'message' => 'Cart updated',
-            'line_total' => $line_total,
-            'subtotal' => $totals['subtotal'],
-            'transport_fee' => $totals['transport_fee'],
-            'total' => $totals['total'],
-            'cart_count' => array_sum(array_column($cart, 'quantity'))
-        ));
-    } else {
-        wp_send_json_error(array('message' => 'Product not in cart'));
-    }
-}
-add_action('wp_ajax_htb_update_cart_quantity', 'happyturtle_update_cart_quantity');
-
-
-/**
- * AJAX: Remove item from cart
- */
-function happyturtle_remove_from_cart() {
-    check_ajax_referer('htb_cart_nonce', 'nonce');
-
-    if (!is_user_logged_in()) {
-        wp_send_json_error(array('message' => 'You must be logged in'));
-        return;
-    }
-
-    $product_id = isset($_POST['product_id']) ? intval($_POST['product_id']) : 0;
-    $user_id = get_current_user_id();
-
-    if (!$product_id) {
-        wp_send_json_error(array('message' => 'Invalid product'));
-        return;
-    }
-
-    // Get cart
-    $cart = get_user_meta($user_id, '_htb_cart', true);
-    if (!is_array($cart)) {
-        $cart = array();
-    }
-
-    // Remove item
-    if (isset($cart[$product_id])) {
-        unset($cart[$product_id]);
-        update_user_meta($user_id, '_htb_cart', $cart);
-
-        // Calculate new totals
-        $totals = happyturtle_calculate_cart_totals($cart);
-
-        wp_send_json_success(array(
-            'message' => 'Item removed from cart',
-            'subtotal' => $totals['subtotal'],
-            'transport_fee' => $totals['transport_fee'],
-            'total' => $totals['total'],
-            'cart_count' => array_sum(array_column($cart, 'quantity'))
-        ));
-    } else {
-        wp_send_json_error(array('message' => 'Product not in cart'));
-    }
-}
-add_action('wp_ajax_htb_remove_from_cart', 'happyturtle_remove_from_cart');
-
-
-/**
- * AJAX: Clear entire cart
- */
-function happyturtle_clear_cart() {
-    check_ajax_referer('htb_cart_nonce', 'nonce');
-
-    if (!is_user_logged_in()) {
-        wp_send_json_error(array('message' => 'You must be logged in'));
-        return;
-    }
-
-    $user_id = get_current_user_id();
-
-    // Clear cart
-    delete_user_meta($user_id, '_htb_cart');
-
-    wp_send_json_success(array(
-        'message' => 'Cart cleared',
-        'cart_count' => 0
-    ));
-}
-add_action('wp_ajax_htb_clear_cart', 'happyturtle_clear_cart');
-
-
-/**
- * Calculate cart totals
- */
-function happyturtle_calculate_cart_totals($cart) {
-    if (!is_array($cart) || empty($cart)) {
-        return array(
-            'subtotal' => 0,
-            'transport_fee' => 0,
-            'total' => 0
-        );
-    }
-
-    $subtotal = 0;
-    $cart_items = array();
-
-    foreach ($cart as $product_id => $item) {
-        $product = get_post($product_id);
-        if (!$product || $product->post_type !== 'htb_product') {
-            continue;
-        }
-
-        $quantity = intval($item['quantity']);
-        $wholesale_price = get_post_meta($product_id, '_wholesale_price', true);
-        $tiered_pricing = get_post_meta($product_id, '_tiered_pricing', true);
-
-        // Calculate item price with tiered pricing
-        $item_price = floatval($wholesale_price);
-        if ($tiered_pricing && is_array($tiered_pricing)) {
-            foreach (array_reverse($tiered_pricing) as $tier) {
-                if ($quantity >= intval($tier['min_qty'])) {
-                    $item_price = floatval($tier['price']);
-                    break;
-                }
-            }
-        }
-
-        $line_total = $item_price * $quantity;
-        $subtotal += $line_total;
-
-        $cart_items[$product_id] = array(
-            'quantity' => $quantity,
-            'price' => $item_price,
-            'total' => $line_total
-        );
-    }
-
-    // Calculate transport fee
-    $transport_fee = 0;
-    if (class_exists('HappyTurtle_Order_Settings')) {
-        $transport_fee = HappyTurtle_Order_Settings::calculate_transport_fee($cart_items, $subtotal);
-    }
-
-    $total = $subtotal + $transport_fee;
-
-    return array(
-        'subtotal' => $subtotal,
-        'transport_fee' => $transport_fee,
-        'total' => $total
-    );
-}
-/**
- * Checkout Functions
- * AJAX handlers and order processing for checkout page
- */
-
-// ============================================================
-// ENQUEUE CHECKOUT SCRIPTS
-// ============================================================
-
-/**
- * Enqueue checkout page scripts
- */
-function happyturtle_checkout_scripts() {
-    // Only load on checkout page
-    if (!is_page_template('page-checkout.php')) {
-        return;
-    }
-
-    // Enqueue checkout JavaScript
-    wp_enqueue_script(
-        'htb-checkout',
-        get_template_directory_uri() . '/assets/js/checkout.js',
-        array(),
-        '1.0.0',
-        true
-    );
-
-    // Localize script with AJAX data
-    wp_localize_script('htb-checkout', 'htbCheckout', array(
-        'ajaxUrl' => admin_url('admin-ajax.php'),
-        'nonce' => wp_create_nonce('htb_checkout_nonce')
-    ));
-}
-add_action('wp_enqueue_scripts', 'happyturtle_checkout_scripts');
-
-
-// ============================================================
-// ORDER SUBMISSION AJAX HANDLER
-// ============================================================
-
-/**
- * Handle order submission from checkout page
- */
-function happyturtle_submit_order() {
-    // Verify nonce
-    if (!isset($_POST['htb_checkout_nonce']) || !wp_verify_nonce($_POST['htb_checkout_nonce'], 'htb_checkout')) {
-        wp_send_json_error(array('message' => 'Security verification failed.'));
-    }
-
-    // Check if user is logged in
-    if (!is_user_logged_in()) {
-        wp_send_json_error(array('message' => 'You must be logged in to submit an order.'));
-    }
-
-    $user_id = get_current_user_id();
-
-    // Get partner information
-    global $wpdb;
-    $partner = $wpdb->get_row($wpdb->prepare(
-        "SELECT * FROM {$wpdb->prefix}1_happyturtle_partners WHERE wp_user_id = %d",
-        $user_id
-    ), ARRAY_A);
-
-    if (!$partner) {
-        wp_send_json_error(array('message' => 'Partner information not found.'));
-    }
-
-    $partner_id = intval($partner['id']);
-
-    // Get cart from user meta
-    $cart = get_user_meta($user_id, '_htb_cart', true);
-
-    if (!is_array($cart) || empty($cart)) {
-        wp_send_json_error(array('message' => 'Your cart is empty.'));
-    }
-
-    // Validate delivery information
-    $delivery_address = isset($_POST['delivery_address']) ? sanitize_textarea_field($_POST['delivery_address']) : '';
-    $delivery_city = isset($_POST['delivery_city']) ? sanitize_text_field($_POST['delivery_city']) : '';
-    $delivery_state = isset($_POST['delivery_state']) ? sanitize_text_field($_POST['delivery_state']) : '';
-    $delivery_zip = isset($_POST['delivery_zip']) ? sanitize_text_field($_POST['delivery_zip']) : '';
-    $delivery_phone = isset($_POST['delivery_phone']) ? sanitize_text_field($_POST['delivery_phone']) : '';
-    $delivery_instructions = isset($_POST['delivery_instructions']) ? sanitize_textarea_field($_POST['delivery_instructions']) : '';
-
-    if (empty($delivery_address) || empty($delivery_city) || empty($delivery_state) || empty($delivery_zip) || empty($delivery_phone)) {
-        wp_send_json_error(array('message' => 'Please fill in all required delivery information.'));
-    }
-
-    // Validate payment information
-    $payment_terms = isset($_POST['payment_terms']) ? sanitize_text_field($_POST['payment_terms']) : '';
-    $po_number = isset($_POST['po_number']) ? sanitize_text_field($_POST['po_number']) : '';
-    $order_notes = isset($_POST['order_notes']) ? sanitize_textarea_field($_POST['order_notes']) : '';
-
-    if (empty($payment_terms)) {
-        wp_send_json_error(array('message' => 'Please select payment terms.'));
-    }
-
-    // Calculate order totals
-    $subtotal = 0;
-    $cart_items = array();
-
-    foreach ($cart as $product_id => $item) {
-        $product = get_post($product_id);
-
-        if (!$product || $product->post_type !== 'htb_product') {
-            continue;
-        }
-
-        $quantity = intval($item['quantity']);
-        $wholesale_price = get_post_meta($product_id, '_wholesale_price', true);
-        $tiered_pricing = get_post_meta($product_id, '_tiered_pricing', true);
-        $sku = get_post_meta($product_id, '_sku', true);
-
-        // Apply tiered pricing
-        $item_price = floatval($wholesale_price);
-        $discount_applied = false;
-
-        if ($tiered_pricing && is_array($tiered_pricing)) {
-            foreach (array_reverse($tiered_pricing) as $tier) {
-                if ($quantity >= intval($tier['min_qty'])) {
-                    $item_price = floatval($tier['price']);
-                    $discount_applied = true;
-                    break;
-                }
-            }
-        }
-
-        $line_total = $item_price * $quantity;
-        $subtotal += $line_total;
-
-        $cart_items[] = array(
-            'product_id' => $product_id,
-            'product_name' => $product->post_title,
-            'sku' => $sku,
-            'quantity' => $quantity,
-            'price' => $item_price,
-            'line_total' => $line_total
-        );
-    }
-
-    // Calculate transport fee
-    $transport_fee = 0;
-    if (class_exists('HappyTurtle_Order_Settings')) {
-        $transport_fee = HappyTurtle_Order_Settings::calculate_transport_fee($cart, $subtotal);
-    }
-
-    $total = $subtotal + $transport_fee;
-
-    // Determine order approval status based on workflow
-    $approval_workflow = get_option('htb_order_approval_workflow', 'manual');
-    $order_status = 'pending'; // Default to pending approval
-
-    if (class_exists('HappyTurtle_Order_Settings')) {
-        $should_auto_approve = HappyTurtle_Order_Settings::should_auto_approve($partner_id, $total);
-
-        if ($should_auto_approve) {
-            $order_status = 'approved';
-        }
-    }
-
-    // Insert order into database
-    $order_data = array(
-        'partner_id' => $partner_id,
-        'order_number' => happyturtle_generate_order_number(),
-        'order_status' => $order_status,
-        'subtotal' => $subtotal,
-        'transport_fee' => $transport_fee,
-        'total' => $total,
-        'payment_terms' => $payment_terms,
-        'po_number' => $po_number,
-        'delivery_address' => $delivery_address,
-        'delivery_city' => $delivery_city,
-        'delivery_state' => $delivery_state,
-        'delivery_zip' => $delivery_zip,
-        'delivery_phone' => $delivery_phone,
-        'delivery_instructions' => $delivery_instructions,
-        'order_notes' => $order_notes,
-        'created_at' => current_time('mysql'),
-        'updated_at' => current_time('mysql')
-    );
-
-    $inserted = $wpdb->insert(
-        $wpdb->prefix . '1_happyturtle_orders',
-        $order_data,
-        array('%d', '%s', '%s', '%f', '%f', '%f', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')
-    );
-
-    if (!$inserted) {
-        wp_send_json_error(array('message' => 'Failed to create order. Please try again.'));
-    }
-
-    $order_id = $wpdb->insert_id;
-
-    // Insert order items
-    foreach ($cart_items as $cart_item) {
-        $item_data = array(
-            'order_id' => $order_id,
-            'product_id' => $cart_item['product_id'],
-            'product_name' => $cart_item['product_name'],
-            'sku' => $cart_item['sku'],
-            'quantity' => $cart_item['quantity'],
-            'price' => $cart_item['price'],
-            'line_total' => $cart_item['line_total'],
-            'created_at' => current_time('mysql')
-        );
-
-        $wpdb->insert(
-            $wpdb->prefix . '1_happyturtle_order_items',
-            $item_data,
-            array('%d', '%d', '%s', '%s', '%d', '%f', '%f', '%s')
-        );
-    }
-
-    // Clear cart
-    delete_user_meta($user_id, '_htb_cart');
-
-    // Log order creation in access log
-    if (function_exists('happyturtle_log_access')) {
-        happyturtle_log_access(array(
-            'partner_id' => $partner_id,
-            'endpoint' => '/checkout/submit-order',
-            'request_method' => 'POST',
-            'response_status' => 200,
-            'request_body' => json_encode(array(
-                'order_id' => $order_id,
-                'order_number' => $order_data['order_number'],
-                'total' => $total,
-                'status' => $order_status
-            ))
-        ));
-    }
-
-    // Send confirmation email
-    happyturtle_send_order_confirmation_email($order_id, $partner, $order_data, $cart_items);
-
-    // Send notification to admin if order requires approval
-    if ($order_status === 'pending') {
-        happyturtle_send_order_notification_to_admin($order_id, $partner, $order_data);
-    }
-
-    // Success response
-    $message = ($order_status === 'approved')
-        ? 'Order submitted and approved successfully!'
-        : 'Order submitted successfully! You will receive a confirmation email once approved.';
-
-    wp_send_json_success(array(
-        'message' => $message,
-        'order_id' => $order_id,
-        'order_number' => $order_data['order_number'],
-        'order_status' => $order_status,
-        'redirect_url' => site_url('/order-confirmation/?order=' . $order_id)
-    ));
-}
-add_action('wp_ajax_htb_submit_order', 'happyturtle_submit_order');
-
-
-// ============================================================
-// HELPER FUNCTIONS
-// ============================================================
-
-/**
- * Generate unique order number
- */
-function happyturtle_generate_order_number() {
-    // Format: HT-YYYYMMDD-XXXXX
-    $date_prefix = 'HT-' . date('Ymd');
-
-    global $wpdb;
-    $today_count = $wpdb->get_var($wpdb->prepare(
-        "SELECT COUNT(*) FROM {$wpdb->prefix}1_happyturtle_orders WHERE order_number LIKE %s",
-        $date_prefix . '-%'
-    ));
-
-    $order_sequence = str_pad($today_count + 1, 5, '0', STR_PAD_LEFT);
-
-    return $date_prefix . '-' . $order_sequence;
-}
-
-
-/**
- * Send order confirmation email to partner
- */
-function happyturtle_send_order_confirmation_email($order_id, $partner, $order_data, $items) {
-    $to = $partner['email'];
-    $subject = 'Order Confirmation - ' . $order_data['order_number'];
-
-    $message = '<html><body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">';
-    $message .= '<div style="max-width: 600px; margin: 0 auto; padding: 20px;">';
-
-    // Header
-    $message .= '<div style="background: linear-gradient(135deg, #1B4332 0%, #2D6A4F 100%); color: #fff; padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">';
-    $message .= '<h1 style="margin: 0; font-size: 28px;">Order Confirmation</h1>';
-    $message .= '</div>';
-
-    // Content
-    $message .= '<div style="background: #f9f9f9; padding: 30px; border-radius: 0 0 8px 8px;">';
-
-    $message .= '<p>Dear ' . esc_html($partner['contact_name']) . ',</p>';
-
-    if ($order_data['order_status'] === 'approved') {
-        $message .= '<p style="background: #d1f2eb; border-left: 4px solid #10b981; padding: 15px; margin: 20px 0;">Your order has been <strong>automatically approved</strong> and is being processed!</p>';
-    } else {
-        $message .= '<p style="background: #fef3cd; border-left: 4px solid #fbbf24; padding: 15px; margin: 20px 0;">Your order has been received and is <strong>pending approval</strong>. You will receive a confirmation email once your order is reviewed.</p>';
-    }
-
-    $message .= '<h2 style="color: #1B4332; border-bottom: 2px solid #e5e7eb; padding-bottom: 10px;">Order Details</h2>';
-
-    $message .= '<table style="width: 100%; margin: 20px 0;">';
-    $message .= '<tr><td style="padding: 8px 0; font-weight: 600;">Order Number:</td><td>' . esc_html($order_data['order_number']) . '</td></tr>';
-    $message .= '<tr><td style="padding: 8px 0; font-weight: 600;">Order Date:</td><td>' . date('F j, Y', strtotime($order_data['created_at'])) . '</td></tr>';
-    $message .= '<tr><td style="padding: 8px 0; font-weight: 600;">Payment Terms:</td><td>' . esc_html(strtoupper(str_replace('_', '-', $order_data['payment_terms']))) . '</td></tr>';
-    if (!empty($order_data['po_number'])) {
-        $message .= '<tr><td style="padding: 8px 0; font-weight: 600;">PO Number:</td><td>' . esc_html($order_data['po_number']) . '</td></tr>';
-    }
-    $message .= '</table>';
-
-    $message .= '<h2 style="color: #1B4332; border-bottom: 2px solid #e5e7eb; padding-bottom: 10px; margin-top: 30px;">Order Items</h2>';
-
-    $message .= '<table style="width: 100%; border-collapse: collapse; margin: 20px 0;">';
-    $message .= '<thead><tr style="background: #e5e7eb;">';
-    $message .= '<th style="padding: 12px; text-align: left;">Product</th>';
-    $message .= '<th style="padding: 12px; text-align: center;">Qty</th>';
-    $message .= '<th style="padding: 12px; text-align: right;">Price</th>';
-    $message .= '<th style="padding: 12px; text-align: right;">Total</th>';
-    $message .= '</tr></thead>';
-    $message .= '<tbody>';
-
-    foreach ($items as $item) {
-        $message .= '<tr style="border-bottom: 1px solid #e5e7eb;">';
-        $message .= '<td style="padding: 12px;">' . esc_html($item['product_name']) . '<br><small style="color: #6b7280;">SKU: ' . esc_html($item['sku']) . '</small></td>';
-        $message .= '<td style="padding: 12px; text-align: center;">' . intval($item['quantity']) . '</td>';
-        $message .= '<td style="padding: 12px; text-align: right;">$' . number_format($item['price'], 2) . '</td>';
-        $message .= '<td style="padding: 12px; text-align: right; font-weight: 600;">$' . number_format($item['line_total'], 2) . '</td>';
-        $message .= '</tr>';
-    }
-
-    $message .= '</tbody>';
-    $message .= '<tfoot>';
-    $message .= '<tr><td colspan="3" style="padding: 12px; text-align: right; font-weight: 600;">Subtotal:</td><td style="padding: 12px; text-align: right;">$' . number_format($order_data['subtotal'], 2) . '</td></tr>';
-    $message .= '<tr><td colspan="3" style="padding: 12px; text-align: right; font-weight: 600;">Transport Fee:</td><td style="padding: 12px; text-align: right;">$' . number_format($order_data['transport_fee'], 2) . '</td></tr>';
-    $message .= '<tr style="background: #f0f4f2;"><td colspan="3" style="padding: 12px; text-align: right; font-weight: 700; font-size: 18px; color: #1B4332;">Total:</td><td style="padding: 12px; text-align: right; font-weight: 700; font-size: 18px; color: #1B4332;">$' . number_format($order_data['total'], 2) . '</td></tr>';
-    $message .= '</tfoot>';
-    $message .= '</table>';
-
-    $message .= '<h2 style="color: #1B4332; border-bottom: 2px solid #e5e7eb; padding-bottom: 10px; margin-top: 30px;">Delivery Information</h2>';
-
-    $message .= '<p>';
-    $message .= esc_html($order_data['delivery_address']) . '<br>';
-    $message .= esc_html($order_data['delivery_city']) . ', ' . esc_html($order_data['delivery_state']) . ' ' . esc_html($order_data['delivery_zip']) . '<br>';
-    $message .= 'Phone: ' . esc_html($order_data['delivery_phone']);
-    $message .= '</p>';
-
-    if (!empty($order_data['delivery_instructions'])) {
-        $message .= '<p><strong>Delivery Instructions:</strong><br>' . nl2br(esc_html($order_data['delivery_instructions'])) . '</p>';
-    }
-
-    $message .= '<div style="margin-top: 30px; padding: 20px; background: #fff; border: 1px solid #e5e7eb; border-radius: 8px;">';
-    $message .= '<p style="margin: 0;">If you have any questions about your order, please contact us:</p>';
-    $message .= '<p style="margin: 10px 0 0 0;">Email: <a href="mailto:orders@happyturtleprocessing.com">orders@happyturtleprocessing.com</a><br>';
-    $message .= 'Phone: (501) 555-0100</p>';
-    $message .= '</div>';
-
-    $message .= '</div>'; // End content div
-    $message .= '</div>'; // End container div
-    $message .= '</body></html>';
-
-    $headers = array('Content-Type: text/html; charset=UTF-8');
-
-    wp_mail($to, $subject, $message, $headers);
-}
-
-
-/**
- * Send order notification to admin
- */
-function happyturtle_send_order_notification_to_admin($order_id, $partner, $order_data) {
-    $admin_email = get_option('admin_email');
-    $subject = 'New Order Requires Approval - ' . $order_data['order_number'];
-
-    $message = '<html><body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">';
-    $message .= '<div style="max-width: 600px; margin: 0 auto; padding: 20px;">';
-
-    $message .= '<h1 style="color: #1B4332;">New Order Requires Approval</h1>';
-
-    $message .= '<p>A new order has been submitted and requires your approval.</p>';
-
-    $message .= '<table style="width: 100%; margin: 20px 0; border: 1px solid #e5e7eb;">';
-    $message .= '<tr><td style="padding: 10px; font-weight: 600; background: #f9f9f9;">Order Number:</td><td style="padding: 10px;">' . esc_html($order_data['order_number']) . '</td></tr>';
-    $message .= '<tr><td style="padding: 10px; font-weight: 600; background: #f9f9f9;">Partner:</td><td style="padding: 10px;">' . esc_html($partner['business_name']) . '</td></tr>';
-    $message .= '<tr><td style="padding: 10px; font-weight: 600; background: #f9f9f9;">Total:</td><td style="padding: 10px; font-size: 18px; font-weight: 700; color: #1B4332;">$' . number_format($order_data['total'], 2) . '</td></tr>';
-    $message .= '<tr><td style="padding: 10px; font-weight: 600; background: #f9f9f9;">Payment Terms:</td><td style="padding: 10px;">' . esc_html(strtoupper(str_replace('_', '-', $order_data['payment_terms']))) . '</td></tr>';
-    $message .= '</table>';
-
-    $message .= '<p style="margin-top: 30px;"><a href="' . admin_url('admin.php?page=b2b-orders&order_id=' . $order_id) . '" style="display: inline-block; padding: 12px 24px; background: #1B4332; color: #fff; text-decoration: none; border-radius: 6px;">Review Order in Admin</a></p>';
-
-    $message .= '</div>';
-    $message .= '</body></html>';
-
-    $headers = array('Content-Type: text/html; charset=UTF-8');
-
-    wp_mail($admin_email, $subject, $message, $headers);
-}
+add_filter('woocommerce_placeholder_img', 'happyturtle_wc_placeholder_img', 10, 3);
 
 
 // ============================================================================
-// PLUGIN RECOMMENDATIONS & SETUP WIZARD
+// WOOCOMMERCE ACCESS CONTROL - PARTNER AND ADMIN ONLY
 // ============================================================================
+// ABC Rule 19.1(a) Compliance: Store access restricted to verified partners only.
+// - Subscribers: Can log in but cannot access store (pending verification)
+// - Partners: Full store access (verified)
+// - Administrators: Full store access
 
-/**
- * Load plugin recommendation system
- * Provides setup wizard, installation prompts, and configuration tracking
- */
-require_once get_template_directory() . '/inc/class-plugin-recommendations.php';
-
-
-// ============================================================================
-// PARTNER LICENSE LOOKUP & AUTO-POPULATE FOR FORMS
-// ============================================================================
-
-/**
- * Enqueue license lookup scripts on pages with WPForms
- */
-function happyturtle_license_lookup_scripts() {
-    // Load on any page that might have WPForms or check URL for partner-related pages
-    $load_script = false;
-
-    // Check by page slug
-    if (is_page(array('contact', 'partner-application', 'quote', 'support', 'compliance-inquiry'))) {
-        $load_script = true;
+function happyturtle_restrict_woocommerce_access() {
+    // Skip admin and AJAX requests
+    if (is_admin() || wp_doing_ajax()) {
+        return;
     }
 
-    // Also check URL path for partner-related pages (handles cases where is_page fails)
-    $request_uri = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '';
-    if (strpos($request_uri, 'partner') !== false ||
-        strpos($request_uri, 'contact') !== false ||
-        strpos($request_uri, 'quote') !== false ||
-        strpos($request_uri, 'support') !== false ||
-        strpos($request_uri, 'compliance') !== false) {
-        $load_script = true;
+    // Skip if WooCommerce isn't active
+    if (!function_exists('is_woocommerce')) {
+        return;
     }
 
-    // Also load if URL has license parameter (redirect from contact page)
-    if (isset($_GET['license']) || isset($_GET['name']) || isset($_GET['email'])) {
-        $load_script = true;
+    // Check if on any WooCommerce page that should be restricted
+    $is_store_page = false;
+
+    if (function_exists('is_shop') && is_shop()) $is_store_page = true;
+    if (function_exists('is_product_category') && is_product_category()) $is_store_page = true;
+    if (function_exists('is_product_tag') && is_product_tag()) $is_store_page = true;
+    if (function_exists('is_product') && is_product()) $is_store_page = true;
+    if (function_exists('is_cart') && is_cart()) $is_store_page = true;
+    if (function_exists('is_checkout') && is_checkout()) $is_store_page = true;
+    if (function_exists('is_woocommerce') && is_woocommerce() && !is_account_page()) $is_store_page = true;
+
+    // Allow my-account page for login
+    if (function_exists('is_account_page') && is_account_page()) {
+        return;
     }
 
-    if ($load_script) {
-        wp_enqueue_script(
-            'happyturtle-license-lookup',
-            get_template_directory_uri() . '/assets/js/license-lookup.js',
-            array('jquery'),
-            '1.0.9', // Version bump to force cache refresh
-            true
-        );
+    // If not a store page, allow access
+    if (!$is_store_page) {
+        return;
+    }
 
-        wp_localize_script('happyturtle-license-lookup', 'htbLicenseLookup', array(
-            'ajaxUrl' => admin_url('admin-ajax.php'),
-            'nonce' => wp_create_nonce('htb_license_lookup_nonce'),
-            'isLoggedIn' => is_user_logged_in()
-        ));
+    // Not logged in - redirect to login
+    if (!is_user_logged_in()) {
+        wp_redirect(wc_get_page_permalink('myaccount'));
+        exit;
+    }
+
+    // Logged in - check if user has partner or admin role
+    $user = wp_get_current_user();
+    $allowed_roles = ['partner', 'administrator'];
+
+    if (!array_intersect($allowed_roles, $user->roles)) {
+        // User is logged in but not a verified partner (e.g., subscriber)
+        wp_redirect(home_url('/?access=pending'));
+        exit;
     }
 }
-add_action('wp_enqueue_scripts', 'happyturtle_license_lookup_scripts', 25);
+add_action('template_redirect', 'happyturtle_restrict_woocommerce_access');
+
+// ============================================================================
+// B2B FUNCTIONALITY
+// ============================================================================
+//
+// All B2B functionality has been moved to the B2B Suite plugin:
+// - Partner Management
+// - Product Catalog
+// - Order Processing
+// - Security & Logging
+// - REST API
+// - WooCommerce Integration
+//
+// Make sure B2B Suite plugin is active for full functionality.
 
 
-/**
- * AJAX: Lookup partner by license number
- * Note: This is a read-only lookup of public business license data
- */
-function happyturtle_lookup_partner_by_license() {
-    $license = isset($_POST['license_number']) ? sanitize_text_field($_POST['license_number']) : '';
+// ============================================================================
+// PROTECT PARTNER ROLE FROM WOOCOMMERCE OVERRIDE
+// ============================================================================
+// Prevents WooCommerce from changing "partner" role to "customer"
 
-    if (empty($license)) {
-        wp_send_json_error(array('message' => 'Please enter a license number'));
+function happyturtle_protect_partner_role($customer_id, $new_customer_data, $password_generated) {
+    $user = get_user_by('id', $customer_id);
+    if (!$user) return;
+
+    // If user is a partner, don't let WooCommerce change it
+    if (in_array('partner', $user->roles)) {
         return;
-    }
-
-    global $wpdb;
-    $table = $wpdb->prefix . '1_happyturtle_partners';
-
-    // Search by license_number or mmcc_license_number
-    $partner = $wpdb->get_row($wpdb->prepare(
-        "SELECT id, business_name, contact_name, email, phone, address, city, state, zip,
-                license_number, license_type, biotrack_license, license_status, status
-         FROM $table
-         WHERE license_number = %s OR mmcc_license_number = %s
-         LIMIT 1",
-        $license,
-        $license
-    ), ARRAY_A);
-
-    if (!$partner) {
-        wp_send_json_error(array(
-            'message' => 'License not found in our system. Please enter your information manually.',
-            'not_found' => true
-        ));
-        return;
-    }
-
-    // Return partner data for form population
-    wp_send_json_success(array(
-        'partner' => array(
-            'id' => $partner['id'],
-            'business_name' => $partner['business_name'],
-            'contact_name' => $partner['contact_name'],
-            'email' => $partner['email'],
-            'phone' => $partner['phone'],
-            'address' => $partner['address'],
-            'city' => $partner['city'],
-            'state' => $partner['state'],
-            'zip' => $partner['zip'],
-            'license_number' => $partner['license_number'],
-            'license_type' => $partner['license_type'],
-            'biotrack_license' => $partner['biotrack_license'],
-            'license_status' => $partner['license_status'],
-            'status' => $partner['status']
-        ),
-        'message' => 'Partner found! Information auto-filled.'
-    ));
-}
-add_action('wp_ajax_htb_lookup_partner_by_license', 'happyturtle_lookup_partner_by_license');
-add_action('wp_ajax_nopriv_htb_lookup_partner_by_license', 'happyturtle_lookup_partner_by_license');
-
-
-/**
- * AJAX: Update partner information from form
- */
-function happyturtle_update_partner_from_form() {
-    // Verify nonce
-    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'htb_license_lookup_nonce')) {
-        wp_send_json_error(array('message' => 'Security check failed. Please refresh the page.'));
-        return;
-    }
-
-    $partner_id = isset($_POST['partner_id']) ? intval($_POST['partner_id']) : 0;
-    $license_number = isset($_POST['license_number']) ? sanitize_text_field($_POST['license_number']) : '';
-
-    if (!$partner_id && !$license_number) {
-        wp_send_json_error(array('message' => 'Partner identification required'));
-        return;
-    }
-
-    global $wpdb;
-    $table = $wpdb->prefix . '1_happyturtle_partners';
-
-    // Build update data from submitted fields
-    $update_data = array();
-    $update_format = array();
-
-    $fields_to_update = array(
-        'business_name' => 'sanitize_text_field',
-        'contact_name' => 'sanitize_text_field',
-        'email' => 'sanitize_email',
-        'phone' => 'sanitize_text_field',
-        'address' => 'sanitize_textarea_field',
-        'city' => 'sanitize_text_field',
-        'state' => 'sanitize_text_field',
-        'zip' => 'sanitize_text_field',
-        'biotrack_license' => 'sanitize_text_field',
-        'license_type' => 'sanitize_text_field'
-    );
-
-    foreach ($fields_to_update as $field => $sanitizer) {
-        if (isset($_POST[$field]) && !empty($_POST[$field])) {
-            $update_data[$field] = call_user_func($sanitizer, $_POST[$field]);
-            $update_format[] = '%s';
-        }
-    }
-
-    if (empty($update_data)) {
-        wp_send_json_error(array('message' => 'No data to update'));
-        return;
-    }
-
-    // Add updated_at timestamp
-    $update_data['updated_at'] = current_time('mysql');
-    $update_format[] = '%s';
-
-    // Determine where clause
-    if ($partner_id) {
-        $where = array('id' => $partner_id);
-        $where_format = array('%d');
-    } else {
-        $where = array('license_number' => $license_number);
-        $where_format = array('%s');
-    }
-
-    $result = $wpdb->update($table, $update_data, $where, $update_format, $where_format);
-
-    if ($result !== false) {
-        wp_send_json_success(array('message' => 'Partner information updated successfully'));
-    } else {
-        wp_send_json_error(array('message' => 'Failed to update partner information'));
     }
 }
-add_action('wp_ajax_htb_update_partner_from_form', 'happyturtle_update_partner_from_form');
-add_action('wp_ajax_nopriv_htb_update_partner_from_form', 'happyturtle_update_partner_from_form');
+add_action('woocommerce_created_customer', 'happyturtle_protect_partner_role', 5, 3);
+
+// Prevent role change on order completion
+function happyturtle_prevent_role_change_on_order($order_id) {
+    $order = wc_get_order($order_id);
+    if (!$order) return;
+
+    $user_id = $order->get_customer_id();
+    if (!$user_id) return;
+
+    $user = get_user_by('id', $user_id);
+    if (!$user) return;
+
+    // If user is a partner, remove "customer" role if WooCommerce added it
+    if (in_array('partner', $user->roles) && in_array('customer', $user->roles)) {
+        $user->remove_role('customer');
+    }
+}
+add_action('woocommerce_order_status_completed', 'happyturtle_prevent_role_change_on_order', 20);
+add_action('woocommerce_order_status_processing', 'happyturtle_prevent_role_change_on_order', 20);
+
+// ============================================================================
+// HIDE LOGIN LINKS WHEN B2B PLUGIN IS INACTIVE
+// ============================================================================
+
+function happyturtle_hide_login_without_b2b() {
+    // Only hide login links when B2B plugin is deactivated
+    if (!class_exists('B2B_Suite') && !defined('B2B_SUITE_VERSION')) {
+        echo '<style>
+            /* Hide login/account links when B2B is inactive */
+            a[href*="/my-account"],
+            a[href*="wp-login.php"],
+            .login-link,
+            .partner-login,
+            .atom-login-link,
+            .footer-atom-link,
+            .wp-block-woocommerce-customer-account {
+                display: none !important;
+            }
+        </style>';
+    }
+}
+add_action('wp_head', 'happyturtle_hide_login_without_b2b');
+
+// ============================================================================
+// ABC RULE 19.4 - REQUIRED WARNINGS ON PRODUCT/SHOP PAGES
+// ============================================================================
+
+function htp_compliance_warning_notice() {
+    $warning = '<div class="htp-compliance-warning" style="background: linear-gradient(135deg, #fef3c7, #fde68a); border: 1px solid #f59e0b; border-left: 4px solid #d97706; padding: 15px 20px; margin: 20px 0; border-radius: 8px; font-size: 0.9em; color: #92400e;">
+        <strong>⚠️ WARNING:</strong> This product is for use only by licensed Arkansas medical marijuana dispensaries. Cannabis products are intended for adult use only (21+). Keep out of reach of children. These statements have not been evaluated by the FDA. This product is not intended to diagnose, treat, cure, or prevent any disease.
+    </div>';
+    echo $warning;
+}
+
+// Add warning to shop/archive pages (above products)
+add_action('woocommerce_before_shop_loop', 'htp_compliance_warning_notice', 5);
+
+// Add warning to single product pages (above product)
+add_action('woocommerce_before_single_product', 'htp_compliance_warning_notice', 5);
+
+// Add warning to cart page
+add_action('woocommerce_before_cart', 'htp_compliance_warning_notice', 5);
+
+// Add warning to checkout page
+add_action('woocommerce_before_checkout_form', 'htp_compliance_warning_notice', 5);
+
+// ABC COMPLIANCE WARNING - JavaScript injection for block themes
+function htp_compliance_warning_js() {
+    if (!function_exists('is_woocommerce')) return;
+    if (!is_woocommerce() && !is_cart() && !is_checkout()) return;
+    ?>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        if (document.querySelector('.htp-compliance-warning')) return;
+        var warning = document.createElement('div');
+        warning.className = 'htp-compliance-warning';
+        warning.innerHTML = '<strong>⚠️ WARNING:</strong> This product is for use only by licensed Arkansas medical marijuana dispensaries. Cannabis products are intended for adult use only (21+). Keep out of reach of children. These statements have not been evaluated by the FDA. This product is not intended to diagnose, treat, cure, or prevent any disease.';
+        warning.style.cssText = 'background: linear-gradient(135deg, #fef3c7, #fde68a); border: 1px solid #f59e0b; border-left: 4px solid #d97706; padding: 15px 20px; margin: 20px auto; border-radius: 8px; font-size: 0.9em; color: #92400e; max-width: 1200px;';
+        var main = document.querySelector('.woocommerce-products-header, .wp-block-woocommerce-product-collection, .woocommerce, main .entry-content, main');
+        if (main) main.insertBefore(warning, main.firstChild);
+    });
+    </script>
+    <?php
+}
+add_action('wp_footer', 'htp_compliance_warning_js');
